@@ -24,7 +24,9 @@ func Provider() terraform.ResourceProvider {
 				Description: "RHSM API Refresh Token",
 			},
 		},
-		ResourcesMap: map[string]*schema.Resource{},
+		ResourcesMap: map[string]*schema.Resource{
+			"rhsm_allocation": resourceAllocation(),
+		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"rhsm_allocation": dataSourceAllocation(),
 		},
