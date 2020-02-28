@@ -149,10 +149,7 @@ func resourceAllocationCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	name := d.Get("name").(string)
-	// params := allocation.NewCreateSatelliteParams()
-	// params.SetName(name)
 
-	//alloc, err := client.Allocation.CreateSatellite(params, auth)
 	alloc, _, err := client.AllocationApi.CreateSatellite(auth, name)
 	if err != nil {
 		return err
