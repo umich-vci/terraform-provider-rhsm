@@ -27,11 +27,12 @@ func Provider() terraform.ResourceProvider {
 		ResourcesMap: map[string]*schema.Resource{
 			"rhsm_allocation":             resourceAllocation(),
 			"rhsm_allocation_entitlement": resourceAllocationEntitlement(),
+			"rhsm_allocation_manifest":    resourceAllocationManifest(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"rhsm_allocation":             dataSourceAllocation(),
-			"rhsm_allocation_pools":       dataSourceAllocationPools(),
 			"rhsm_allocation_entitlement": dataSourceAllocationEntitlement(),
+			"rhsm_allocation_pools":       dataSourceAllocationPools(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
