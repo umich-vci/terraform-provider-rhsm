@@ -53,7 +53,7 @@ func dataSourceAllocationEntitlementRead(d *schema.ResourceData, meta interface{
 		Include: optional.NewString("entitlements"),
 	}
 
-	alloc, resp, err := client.AllocationApi.ShowAllocation(auth, allocationUUID, opts)
+	alloc, _, err := client.AllocationApi.ShowAllocation(auth, allocationUUID, opts)
 	if err != nil {
 		return err
 	}
