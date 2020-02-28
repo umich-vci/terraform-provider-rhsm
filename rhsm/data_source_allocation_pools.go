@@ -7,9 +7,9 @@ import (
 	"github.com/umich-vci/gorhsm"
 )
 
-func datasourceAllocationPools() *schema.Resource {
+func dataSourceAllocationPools() *schema.Resource {
 	return &schema.Resource{
-		Read: datasourceAllocationPoolsRead,
+		Read: dataSourceAllocationPoolsRead,
 		Schema: map[string]*schema.Schema{
 			"allocation_uuid": &schema.Schema{
 				Type:         schema.TypeString,
@@ -68,7 +68,7 @@ func datasourceAllocationPools() *schema.Resource {
 	}
 }
 
-func datasourceAllocationPoolsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAllocationPoolsRead(d *schema.ResourceData, meta interface{}) error {
 	client, auth, err := meta.(*Config).Client()
 	if err != nil {
 		return err
