@@ -26,7 +26,7 @@ func dataSourceAllocationEntitlement() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"entitlement_quantity": &schema.Schema{
+			"quantity": &schema.Schema{
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
