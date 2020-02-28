@@ -151,7 +151,7 @@ func resourceAllocationEntitlementUpdate(d *schema.ResourceData, meta interface{
 	entitlementID := d.Id()
 
 	opts := &gorhsm.UpdateEntitlementAllocationOpts{
-		Quantity: optional.NewInt64(d.Get("quantity").(int64)),
+		Quantity: optional.NewInt64(int64(d.Get("quantity").(int))),
 	}
 
 	_, _, err = client.AllocationApi.UpdateEntitlementAllocation(auth, allocationUUID, entitlementID, opts)
