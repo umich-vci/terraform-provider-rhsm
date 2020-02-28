@@ -44,33 +44,18 @@ func dataSourceAllocation() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"entitlement_reason": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"entitlement_valid": &schema.Schema{
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"entitlements": &schema.Schema{
+			"entitlements_attached": &schema.Schema{
 				Type:     schema.TypeList,
 				Computed: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"contract_number": {
+						"reason": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"entitlement_quantity": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"sku": {
-							Type:     schema.TypeString,
+						"valid": {
+							Type:     schema.TypeBool,
 							Computed: true,
 						},
 					},
@@ -107,20 +92,12 @@ func dataSourceAllocationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("created_by", alloc.Body.CreatedBy)
 	d.Set("last_modified", alloc.Body.LastModified.Format("2006-01-02T15:04:05.000Z"))
 	d.Set("entitlements_attached_quantity", alloc.Body.EntitlementsAttachedQuantity)
-	d.Set("entitlement_reason", alloc.Body.EntitlementsAttached.Reason)
-	d.Set("entitlement_valid", alloc.Body.EntitlementsAttached.Valid)
 
-	entitlements := []map[string]interface{}{}
-	for _, x := range alloc.Body.EntitlementsAttached.Value {
-		entitlement := make(map[string]interface{})
-		entitlement["contract_number"] = x.ContractNumber
-		entitlement["entitlement_quantity"] = x.EntitlementQuantity
-		entitlement["id"] = x.Id
-		entitlement["sku"] = x.Sku
-		entitlements = append(entitlements, entitlement)
-
-	}
-	d.Set("entitlements", entitlements)
+	entitlementsAttached := make(map[string]interface{})
+	entitlementsAttached["reason"] = alloc.Body.EntitlementsAttached.Reason
+	entitlementsAttached["valid"] = alloc.Body.EntitlementsAttached.Valid
+	entitlementsAttachedList := []map[string]interface{}{entitlementsAttached}
+	d.Set("entitlements_attached", entitlementsAttachedList)
 
 	return nil
 }
