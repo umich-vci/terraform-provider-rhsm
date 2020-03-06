@@ -64,9 +64,11 @@ func resourceAllocationEntitlementRead(d *schema.ResourceData, meta interface{})
 
 	alloc, resp, err := client.AllocationApi.ShowAllocation(auth, allocationUUID, opts)
 	if err != nil {
-		if resp.StatusCode == 404 {
-			d.SetId("")
-			return nil
+		if resp != nil {
+			if resp.StatusCode == 404 {
+				d.SetId("")
+				return nil
+			}
 		}
 		return err
 	}
