@@ -121,7 +121,7 @@ func resourceAllocationEntitlementCreate(d *schema.ResourceData, meta interface{
 	}
 
 	opts := &gorhsm.AttachEntitlementAllocationOpts{
-		Quantity: optional.NewInt64(int64(d.Get("quantity").(int))),
+		Quantity: optional.NewInt32(int32(d.Get("quantity").(int))),
 	}
 
 	alloc, _, err := client.AllocationApi.AttachEntitlementAllocation(auth, pool, allocationUUID, opts)
@@ -153,7 +153,7 @@ func resourceAllocationEntitlementUpdate(d *schema.ResourceData, meta interface{
 	entitlementID := d.Id()
 
 	opts := &gorhsm.UpdateEntitlementAllocationOpts{
-		Quantity: optional.NewInt64(int64(d.Get("quantity").(int))),
+		Quantity: optional.NewInt32(int32(d.Get("quantity").(int))),
 	}
 
 	_, _, err = client.AllocationApi.UpdateEntitlementAllocation(auth, allocationUUID, entitlementID, opts)
