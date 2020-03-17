@@ -66,7 +66,7 @@ func resourceAllocationManifestRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	d.Set("last_modified", alloc.Body.LastModified.Format("2006-01-02T15:04:05.000Z"))
+	d.Set("last_modified", alloc.Body.LastModified)
 
 	return nil
 }
@@ -86,7 +86,7 @@ func resourceAllocationManifestCreate(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	d.Set("manifest_last_modified", alloc.Body.LastModified.Format("2006-01-02T15:04:05.000Z"))
+	d.Set("manifest_last_modified", alloc.Body.LastModified)
 
 	exportJob, _, err := client.AllocationApi.ExportAllocation(auth, allocationUUID)
 	if err != nil {
