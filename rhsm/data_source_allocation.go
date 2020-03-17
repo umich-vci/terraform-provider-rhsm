@@ -88,9 +88,9 @@ func dataSourceAllocationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", alloc.Body.Name)
 	d.Set("type", alloc.Body.Type)
 	d.Set("version", alloc.Body.Version)
-	d.Set("created_date", alloc.Body.CreatedDate.Format("2006-01-02T15:04:05.000Z"))
+	d.Set("created_date", alloc.Body.CreatedDate)
 	d.Set("created_by", alloc.Body.CreatedBy)
-	d.Set("last_modified", alloc.Body.LastModified.Format("2006-01-02T15:04:05.000Z"))
+	d.Set("last_modified", alloc.Body.LastModified)
 	d.Set("entitlements_attached_quantity", alloc.Body.EntitlementsAttachedQuantity)
 
 	entitlementsAttached := make(map[string]interface{})

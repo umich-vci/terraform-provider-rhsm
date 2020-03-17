@@ -93,12 +93,12 @@ func dataSourceAllocationPoolsRead(d *schema.ResourceData, meta interface{}) err
 	for _, x := range pools.Body {
 		pool := make(map[string]interface{})
 		pool["contract_number"] = x.ContractNumber
-		pool["end_date"] = x.EndDate.Format("2006-01-02T15:04:05.000Z")
+		pool["end_date"] = x.EndDate
 		pool["entitlements_available"] = x.EntitlementsAvailable
 		pool["id"] = x.Id
 		pool["service_level"] = x.ServiceLevel
 		pool["sku"] = x.Sku
-		pool["start_date"] = x.StartDate.Format("2006-01-02T15:04:05.000Z")
+		pool["start_date"] = x.StartDate
 		pool["subscription_name"] = x.SubscriptionName
 		pool["subscription_number"] = x.SubscriptionNumber
 
