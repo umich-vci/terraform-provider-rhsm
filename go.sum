@@ -169,8 +169,8 @@ github.com/stretchr/testify v1.3.0 h1:TivCn/peBQ7UY8ooIcPgZFpTNSz0Q2U6UrFlUfqbe0
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/ulikunitz/xz v0.5.5 h1:pFrO0lVpTBXLpYw+pnLj6TbvHuyjXMfjGeCwSqCVwok=
 github.com/ulikunitz/xz v0.5.5/go.mod h1:2bypXElzHzzJZwzH67Y6wb67pO62Rzfn7BSiF4ABRW8=
-github.com/umich-vci/gorhsm v0.0.0-20200227213931-1c99922d5d78 h1:i0ioRwiaqlv0rqt/+6GDsGXQvxS6EyvNt4D4q3lFcU0=
-github.com/umich-vci/gorhsm v0.0.0-20200227213931-1c99922d5d78/go.mod h1:DR/J0VL9LXmM/luzX9cE46S96R0824XB+B+pEJulkm0=
+github.com/umich-vci/gorhsm v1.113.0 h1:Utz/O4N7uMtUW/DFkcc6NkcXcCxD/TFTpNYzff6+GiE=
+github.com/umich-vci/gorhsm v1.113.0/go.mod h1:XBgiK2nosK9NgguOru2pu+OysCCua99hq0o1Knol+5Y=
 github.com/vmihailenco/msgpack v3.3.3+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
 github.com/vmihailenco/msgpack v4.0.1+incompatible h1:RMF1enSPeKTlXrXdOcqjFUElywVZjjC6pqse21bKbEU=
 github.com/vmihailenco/msgpack v4.0.1+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
