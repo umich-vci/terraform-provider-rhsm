@@ -1,12 +1,4 @@
----
-layout: "rhsm"
-page_title: "RHSM: rhsm_allocation"
-sidebar_current: "docs-rhsm-resource-allocation"
-description: |-
- Create a manifest from a Red Hat Subscription Manager allocation.
----
-
-# rhsm\_allocation\_manifest
+# rhsm\_allocation\_manifest Resource
 
 Use this resource to create a manifest from a RHSM subscription allocation that can be uploaded
 to a Red Hat Satellite server.
@@ -22,9 +14,6 @@ resource "rhsm_allocation_manifest" "manifest" {
 ## Argument Reference
 
 * `allocation_uuid` - (Required) The UUID of the subscription allocation to create the manifest from.
-
-* `tainted` - (Optional) a boolean used to mark when the subscription allocation has been changed
-  since the last time the manifest was generated.  This should be left unset.
 
 ## Attributes Reference
 

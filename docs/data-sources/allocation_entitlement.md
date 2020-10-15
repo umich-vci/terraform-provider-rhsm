@@ -1,12 +1,4 @@
----
-layout: "rhsm"
-page_title: "RHSM: rhsm_allocation_entitlement"
-sidebar_current: "docs-rhsm-datasource-allocation-entitlement"
-description: |-
- Get information about an entitlement associated with a Red Hat Subscription Manager allocation.
----
-
-# rhsm\_allocation
+# rhsm\_allocation Data Source
 
 Get information about an entitlement associated with a Red Hat Subscription Manager allocation.
 

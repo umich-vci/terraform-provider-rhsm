@@ -1,12 +1,4 @@
----
-layout: "rhsm"
-page_title: "Provider: RHSM"
-sidebar_current: "docs-rhsm-index"
-description: |-
-  The Red Hat Subscription Manager (RHSM) provider is used to interact with Red Hat Subscription Manager.
----
-
-# Satellite Provider
+# Red Hat Subscription Manager Provider
 
  The Red Hat Subscription Manager (RHSM) provider is used to interact with Red Hat Subscription Manager.
 

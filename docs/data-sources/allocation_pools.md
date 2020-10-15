@@ -1,12 +1,4 @@
----
-layout: "rhsm"
-page_title: "RHSM: rhsm_allocation_pools"
-sidebar_current: "docs-rhsm-datasource-allocation-pools"
-description: |-
- Get information about pools available to a Red Hat Subscription Manager allocation.
----
-
-# rhsm\_allocation\_pools
+# rhsm\_allocation\_pools Data Source
 
 Get information about pools available to a Red Hat Subscription Manager allocation.
 

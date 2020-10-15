@@ -1,12 +1,4 @@
----
-layout: "rhsm"
-page_title: "RHSM: rhsm_allocation_entitlement"
-sidebar_current: "docs-rhsm-resource-allocation-entitlement"
-description: |-
- Create and attach an entitlement to a Red Hat Subscription Manager Allocation.
----
-
-# rhsm\_allocation\_entitlement
+# rhsm\_allocation\_entitlement Resource
 
 Use this resource to create and attach an entitlement to a RHSM Subscription Allocation
 for a Red Hat Satellite server.
