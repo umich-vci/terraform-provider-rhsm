@@ -32,6 +32,7 @@ func Provider() *schema.Provider {
 			"rhsm_allocation":             dataSourceAllocation(),
 			"rhsm_allocation_entitlement": dataSourceAllocationEntitlement(),
 			"rhsm_allocation_pools":       dataSourceAllocationPools(),
+			"rhsm_cloud_access":           dataSourceCloudAccess(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
