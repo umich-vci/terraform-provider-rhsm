@@ -2,7 +2,6 @@ package rhsm
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
@@ -14,7 +13,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 }
 
 // Provider returns a terraform resource provider
-func Provider() terraform.ResourceProvider {
+func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"refresh_token": {
