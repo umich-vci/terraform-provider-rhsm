@@ -1,12 +1,4 @@
----
-layout: "rhsm"
-page_title: "RHSM: rhsm_allocation"
-sidebar_current: "docs-rhsm-resource-allocation"
-description: |-
- Create a Red Hat Subscription Manager allocation.
----
-
-# rhsm\_allocation
+# rhsm\_allocation Resource
 
 Use this resource to create a RHSM Subscription allocation for a Red Hat Satellite server.
 
@@ -29,8 +21,8 @@ resource "rhsm_allocation" "foo" {
 
 * `type` - The type of the subscription allocation.  The only one supported by this resource is `Satellite`.
 
-* `version` - The version of the subscription allocation type.  This defaults to 6.5, but can be adjusted
-  in the RHSM portal.
+* `version` - The version of the subscription allocation type.  This defaults in the API to 6.5
+  and cannot be set through the API. It can be adjusted in the RHSM portal.
 
 * `created_date` - The date and time the subscription allocation was created.
 

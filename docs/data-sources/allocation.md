@@ -1,12 +1,4 @@
----
-layout: "rhsm"
-page_title: "RHSM: rhsm_allocation"
-sidebar_current: "docs-rhsm-datasource-allocation"
-description: |-
- Look up a Red Hat Subscription Manager allocation.
----
-
-# rhsm\_allocation
+# rhsm\_allocation Data Source
 
 Use this data source to look up a RHSM Subscription allocation.
 
