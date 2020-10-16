@@ -27,6 +27,7 @@ func Provider() *schema.Provider {
 			"rhsm_allocation":             resourceAllocation(),
 			"rhsm_allocation_entitlement": resourceAllocationEntitlement(),
 			"rhsm_allocation_manifest":    resourceAllocationManifest(),
+			"rhsm_cloud_access_account":   resourceCloudAccessAccount(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"rhsm_allocation":             dataSourceAllocation(),
