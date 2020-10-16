@@ -132,25 +132,9 @@ func dataSourceCloudAccessRead(d *schema.ResourceData, meta interface{}) error {
 		cloudProviders = append(cloudProviders, cloudProvider)
 	}
 
-	// for _, x := range alloc.Body.EntitlementsAttached.Value {
-	// 	if x.Id == entitlementID {
-	// 		entitlementFound = true
-	// 		d.Set("contract_number", x.ContractNumber)
-	// 		d.Set("quantity", x.EntitlementQuantity)
-	// 		d.Set("sku", x.Sku)
-
-	// 	}
-	// }
-
 	d.SetId(time.Now().UTC().String())
 
 	d.Set("enabled_accounts", cloudProviders)
-
-	// entitlementsAttached := make(map[string]interface{})
-	// entitlementsAttached["reason"] = alloc.Body.EntitlementsAttached.Reason
-	// entitlementsAttached["valid"] = alloc.Body.EntitlementsAttached.Valid
-	// entitlementsAttachedList := []map[string]interface{}{entitlementsAttached}
-	// d.Set("entitlements_attached", entitlementsAttachedList)
 
 	return nil
 }
