@@ -3,10 +3,8 @@ package rhsm
 import (
 	"fmt"
 
-	"github.com/antihax/optional"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/umich-vci/gorhsm"
 )
 
 func dataSourceAllocationEntitlement() *schema.Resource {
@@ -46,14 +44,9 @@ func dataSourceAllocationEntitlementRead(d *schema.ResourceData, meta interface{
 
 	allocationUUID := d.Get("allocation_uuid").(string)
 	entitlementID := d.Get("entitlement_id").(string)
+	include := "entitlements"
 
-	optional.NewString("entitlements")
-
-	opts := &gorhsm.ShowAllocationOpts{
-		Include: optional.NewString("entitlements"),
-	}
-
-	alloc, _, err := client.AllocationApi.ShowAllocation(auth, allocationUUID, opts)
+	alloc, _, err := client.AllocationApi.ShowAllocation(auth, allocationUUID).Include(include).Execute()
 	if err != nil {
 		return err
 	}
@@ -61,12 +54,12 @@ func dataSourceAllocationEntitlementRead(d *schema.ResourceData, meta interface{
 	d.SetId(entitlementID)
 
 	entitlementFound := false
-	for _, x := range alloc.Body.EntitlementsAttached.Value {
-		if x.Id == entitlementID {
+	for _, x := range *alloc.Body.EntitlementsAttached.Value {
+		if *x.Id == entitlementID {
 			entitlementFound = true
-			d.Set("contract_number", x.ContractNumber)
-			d.Set("quantity", x.EntitlementQuantity)
-			d.Set("sku", x.Sku)
+			d.Set("contract_number", *x.ContractNumber)
+			d.Set("quantity", *x.EntitlementQuantity)
+			d.Set("sku", *x.Sku)
 
 		}
 	}

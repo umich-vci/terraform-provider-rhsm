@@ -1,7 +1,6 @@
 package rhsm
 
 import (
-	"github.com/antihax/optional"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/umich-vci/gorhsm"
@@ -18,6 +17,7 @@ func resourceCloudAccessAccount() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
+				ForceNew:     true,
 			},
 			"provider_short_name": &schema.Schema{
 				Type:         schema.TypeString,
@@ -59,14 +59,14 @@ func resourceCloudAccessAccountRead(d *schema.ResourceData, meta interface{}) er
 	shortName := d.Get("provider_short_name").(string)
 	foundAccount := false
 
-	cap, _, err := client.CloudaccessApi.ListEnabledCloudAccessProviders(auth)
+	cap, _, err := client.CloudaccessApi.ListEnabledCloudAccessProviders(auth).Execute()
 	if err != nil {
 		return err
 	}
 
-	for _, x := range cap.Body {
-		if x.ShortName == shortName {
-			for _, y := range x.Accounts {
+	for _, x := range *cap.Body {
+		if *x.ShortName == shortName {
+			for _, y := range *x.Accounts {
 				if y.Id == id {
 					foundAccount = true
 					d.Set("nickname", y.Nickname)
@@ -96,15 +96,12 @@ func resourceCloudAccessAccountCreate(d *schema.ResourceData, meta interface{}) 
 	nickname := d.Get("nickname").(string)
 
 	account := &gorhsm.AddProviderAccount{
-		Id:       id,
-		Nickname: nickname,
+		Id:       &id,
+		Nickname: &nickname,
 	}
 	accountList := []gorhsm.AddProviderAccount{*account}
-	accountOpts := &gorhsm.AddProviderAccountsOpts{
-		Account: optional.NewInterface(accountList),
-	}
 
-	_, err = client.CloudaccessApi.AddProviderAccounts(auth, shortName, accountOpts)
+	_, err = client.CloudaccessApi.AddProviderAccounts(auth, shortName).Account(accountList).Execute()
 	if err != nil {
 		return err
 	}
@@ -117,15 +114,12 @@ func resourceCloudAccessAccountCreate(d *schema.ResourceData, meta interface{}) 
 		for x := range rawGoldImages {
 			goldimages = append(goldimages, rawGoldImages[x].(string))
 		}
-		gi := &gorhsm.InlineObject2{
+		gi := &gorhsm.InlineObject5{
 			Accounts: []string{id},
 			Images:   goldimages,
 		}
-		goldopts := &gorhsm.EnableGoldImagesOpts{
-			GoldImages: optional.NewInterface(*gi),
-		}
 
-		_, err = client.CloudaccessApi.EnableGoldImages(auth, shortName, goldopts)
+		_, err = client.CloudaccessApi.EnableGoldImages(auth, shortName).GoldImages(*gi).Execute()
 		if err != nil {
 			d.Set("gold_images", []string{})
 			return err
@@ -143,29 +137,19 @@ func resourceCloudAccessAccountUpdate(d *schema.ResourceData, meta interface{}) 
 
 	id := d.Id()
 	shortName := d.Get("provider_short_name").(string)
+	accountID := d.Get("account_id").(string)
 
-	update := &gorhsm.InlineObject{
-		Id: id,
-	}
+	account := &gorhsm.InlineObject3{}
 
-	idOrNameChange := false
-
-	if d.HasChange("account_id") {
-		idOrNameChange = true
-		update.NewID = d.Get("account_id").(string)
-	}
+	nameChange := false
 
 	if d.HasChange("nickname") {
-		idOrNameChange = true
-		update.NewNickname = d.Get("nickname").(string)
+		nameChange = true
+		account.Nickname = d.Get("nickname").(string)
 	}
 
-	updateOpts := &gorhsm.UpdateProviderAccountOpts{
-		Account: optional.NewInterface(*update),
-	}
-
-	if idOrNameChange {
-		_, err = client.CloudaccessApi.UpdateProviderAccount(auth, shortName, updateOpts)
+	if nameChange {
+		_, err = client.CloudaccessApi.UpdateProviderAccount(auth, shortName, accountID).Account(*account).Execute()
 		if err != nil {
 			return err
 		}
@@ -182,15 +166,12 @@ func resourceCloudAccessAccountUpdate(d *schema.ResourceData, meta interface{}) 
 			for x := range rawGoldImages {
 				goldimages = append(goldimages, rawGoldImages[x].(string))
 			}
-			gi := &gorhsm.InlineObject2{
+			gi := &gorhsm.InlineObject5{
 				Accounts: []string{id},
 				Images:   goldimages,
 			}
-			goldopts := &gorhsm.EnableGoldImagesOpts{
-				GoldImages: optional.NewInterface(*gi),
-			}
 
-			_, err = client.CloudaccessApi.EnableGoldImages(auth, shortName, goldopts)
+			_, err = client.CloudaccessApi.EnableGoldImages(auth, shortName).GoldImages(*gi).Execute()
 			if err != nil {
 				d.Set("gold_images", []string{})
 				return err
@@ -210,14 +191,11 @@ func resourceCloudAccessAccountDelete(d *schema.ResourceData, meta interface{}) 
 	id := d.Id()
 	shortName := d.Get("provider_short_name").(string)
 
-	remove := &gorhsm.InlineObject1{
+	remove := &gorhsm.InlineObject2{
 		Id: id,
 	}
-	removeOpts := &gorhsm.RemoveProviderAccountOpts{
-		Account: optional.NewInterface(remove),
-	}
 
-	_, err = client.CloudaccessApi.RemoveProviderAccount(auth, shortName, removeOpts)
+	_, err = client.CloudaccessApi.RemoveProviderAccount(auth, shortName).Account(*remove).Execute()
 	if err != nil {
 		return err
 	}

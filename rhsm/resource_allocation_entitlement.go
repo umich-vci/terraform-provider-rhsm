@@ -3,10 +3,8 @@ package rhsm
 import (
 	"fmt"
 
-	"github.com/antihax/optional"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/umich-vci/gorhsm"
 )
 
 func resourceAllocationEntitlement() *schema.Resource {
@@ -55,14 +53,9 @@ func resourceAllocationEntitlementRead(d *schema.ResourceData, meta interface{})
 
 	allocationUUID := d.Get("allocation_uuid").(string)
 	entitlementID := d.Id()
+	include := "entitlements"
 
-	optional.NewString("entitlements")
-
-	opts := &gorhsm.ShowAllocationOpts{
-		Include: optional.NewString("entitlements"),
-	}
-
-	alloc, resp, err := client.AllocationApi.ShowAllocation(auth, allocationUUID, opts)
+	alloc, resp, err := client.AllocationApi.ShowAllocation(auth, allocationUUID).Include(include).Execute()
 	if err != nil {
 		if resp != nil {
 			if resp.StatusCode == 404 {
@@ -74,12 +67,12 @@ func resourceAllocationEntitlementRead(d *schema.ResourceData, meta interface{})
 	}
 
 	entitlementFound := false
-	for _, x := range alloc.Body.EntitlementsAttached.Value {
-		if x.Id == entitlementID {
+	for _, x := range *alloc.Body.EntitlementsAttached.Value {
+		if *x.Id == entitlementID {
 			entitlementFound = true
-			d.Set("contract_number", x.ContractNumber)
-			d.Set("quantity", x.EntitlementQuantity)
-			d.Set("sku", x.Sku)
+			d.Set("contract_number", *x.ContractNumber)
+			d.Set("quantity", *x.EntitlementQuantity)
+			d.Set("sku", *x.Sku)
 
 		}
 	}
@@ -100,8 +93,7 @@ func resourceAllocationEntitlementCreate(d *schema.ResourceData, meta interface{
 	pool := d.Get("pool").(string)
 	allocationUUID := d.Get("allocation_uuid").(string)
 
-	listPoolsOpts := &gorhsm.ListAllocationPoolsOpts{}
-	pools, _, err := client.AllocationApi.ListAllocationPools(auth, allocationUUID, listPoolsOpts)
+	pools, _, err := client.AllocationApi.ListAllocationPools(auth, allocationUUID).Execute()
 	if err != nil {
 		return err
 	}
@@ -109,31 +101,29 @@ func resourceAllocationEntitlementCreate(d *schema.ResourceData, meta interface{
 	poolFound := false
 	var contractNumber string
 	var sku string
-	for _, x := range pools.Body {
-		if x.Id == pool {
+	for _, x := range *pools.Body {
+		if *x.Id == pool {
 			poolFound = true
-			contractNumber = x.ContractNumber
-			sku = x.Sku
+			contractNumber = *x.ContractNumber
+			sku = *x.Sku
 		}
 	}
 	if !poolFound {
 		return fmt.Errorf("Allocation %s does not have pool with id %s", allocationUUID, pool)
 	}
 
-	opts := &gorhsm.AttachEntitlementAllocationOpts{
-		Quantity: optional.NewInt32(int32(d.Get("quantity").(int))),
-	}
+	quantity := int32(d.Get("quantity").(int))
 
-	alloc, _, err := client.AllocationApi.AttachEntitlementAllocation(auth, pool, allocationUUID, opts)
+	alloc, _, err := client.AllocationApi.AttachEntitlementAllocation(auth, allocationUUID).Quantity(quantity).Pool(pool).Execute()
 	if err != nil {
 		return err
 	}
 
 	entitlementFound := false
-	for _, x := range alloc.Body.EntitlementsAttached.Value {
-		if x.ContractNumber == contractNumber && x.Sku == sku {
+	for _, x := range *alloc.Body.EntitlementsAttached.Value {
+		if *x.ContractNumber == contractNumber && *x.Sku == sku {
 			entitlementFound = true
-			d.SetId(x.Id)
+			d.SetId(*x.Id)
 		}
 	}
 	if !entitlementFound {
@@ -151,12 +141,9 @@ func resourceAllocationEntitlementUpdate(d *schema.ResourceData, meta interface{
 
 	allocationUUID := d.Get("allocation_uuid").(string)
 	entitlementID := d.Id()
+	quantity := int32(d.Get("quantity").(int))
 
-	opts := &gorhsm.UpdateEntitlementAllocationOpts{
-		Quantity: optional.NewInt32(int32(d.Get("quantity").(int))),
-	}
-
-	_, _, err = client.AllocationApi.UpdateEntitlementAllocation(auth, allocationUUID, entitlementID, opts)
+	_, _, err = client.AllocationApi.UpdateEntitlementAllocation(auth, allocationUUID, entitlementID).Quantity(quantity).Execute()
 	if err != nil {
 		return err
 	}
@@ -173,7 +160,7 @@ func resourceAllocationEntitlementDelete(d *schema.ResourceData, meta interface{
 	allocationUUID := d.Get("allocation_uuid").(string)
 	entitlementID := d.Id()
 
-	_, err = client.AllocationApi.RemoveAllocationEntitlement(auth, allocationUUID, entitlementID)
+	_, err = client.AllocationApi.RemoveAllocationEntitlement(auth, allocationUUID, entitlementID).Execute()
 	if err != nil {
 		return err
 	}

@@ -53,9 +53,7 @@ func resourceAllocationManifestRead(d *schema.ResourceData, meta interface{}) er
 
 	uuid := d.Id()
 
-	opts := &gorhsm.ShowAllocationOpts{}
-
-	alloc, resp, err := client.AllocationApi.ShowAllocation(auth, uuid, opts)
+	alloc, resp, err := client.AllocationApi.ShowAllocation(auth, uuid).Execute()
 	if err != nil {
 		if resp != nil {
 			if resp.StatusCode == 404 {
@@ -79,38 +77,36 @@ func resourceAllocationManifestCreate(d *schema.ResourceData, meta interface{}) 
 
 	allocationUUID := d.Get("allocation_uuid").(string)
 
-	opts := &gorhsm.ShowAllocationOpts{}
-
-	alloc, _, err := client.AllocationApi.ShowAllocation(auth, allocationUUID, opts)
+	alloc, _, err := client.AllocationApi.ShowAllocation(auth, allocationUUID).Execute()
 	if err != nil {
 		return err
 	}
 
 	d.Set("manifest_last_modified", alloc.Body.LastModified)
 
-	exportJob, _, err := client.AllocationApi.ExportAllocation(auth, allocationUUID)
+	exportJob, _, err := client.AllocationApi.ExportAllocation(auth, allocationUUID).Execute()
 	if err != nil {
 		return err
 	}
 
-	exportJobID := exportJob.Body.ExportJobID
+	exportJobID := *exportJob.Body.ExportJobID
 
 	var manifestURL string
 	for {
 		time.Sleep(5 * time.Second)
-		status, resp, err := client.AllocationApi.ExportJobAllocation(auth, allocationUUID, exportJobID)
+		status, resp, err := client.AllocationApi.ExportJobAllocation(auth, allocationUUID, exportJobID).Execute()
 		if err != nil {
 			return err
 		}
 		if resp.StatusCode == 200 {
-			manifestURL = status.Body.Href
+			manifestURL = *status.Body.Href
 			break
 		}
 	}
 
 	mclient := new(http.Client)
 	req, err := http.NewRequest(http.MethodGet, manifestURL, nil)
-	req.Header.Add("Authorization", "Bearer "+auth.Value(gorhsm.ContextAPIKey).(gorhsm.APIKey).Key)
+	req.Header.Add("Authorization", "Bearer "+auth.Value(gorhsm.ContextAPIKeys).(gorhsm.APIKey).Key)
 	resp, err := mclient.Do(req)
 	if err != nil {
 		return err
