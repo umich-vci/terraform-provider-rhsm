@@ -77,10 +77,12 @@ func configure(version string, p *schema.Provider) func(context.Context, *schema
 
 		config.UserAgent = userAgent
 
-		auth := context.WithValue(context.Background(), gorhsm.ContextAPIKeys, gorhsm.APIKey{
+		tokenMap := map[string]gorhsm.APIKey{"Bearer": {
 			Key:    token.AccessToken,
-			Prefix: "Bearer",
-		})
+			Prefix: token.TokenType,
+		}}
+
+		auth := context.WithValue(context.Background(), gorhsm.ContextAPIKeys, tokenMap)
 
 		client := gorhsm.NewAPIClient(config)
 
