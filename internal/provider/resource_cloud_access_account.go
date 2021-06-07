@@ -1,6 +1,9 @@
 package provider
 
 import (
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/umich-vci/gorhsm"
@@ -8,48 +11,57 @@ import (
 
 func resourceCloudAccessAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudAccessAccountCreate,
-		Read:   resourceCloudAccessAccountRead,
-		Update: resourceCloudAccessAccountUpdate,
-		Delete: resourceCloudAccessAccountDelete,
+		Description: "Resource to manage entitlement for Red Hat Cloud Access for an account in a supported cloud provider.",
+
+		CreateContext: resourceCloudAccessAccountCreate,
+		ReadContext:   resourceCloudAccessAccountRead,
+		UpdateContext: resourceCloudAccessAccountUpdate,
+		DeleteContext: resourceCloudAccessAccountDelete,
+
 		Schema: map[string]*schema.Schema{
-			"account_id": &schema.Schema{
+			"account_id": {
+				Description:  "The ID of a cloud account that you would like to request Red Hat Cloud Access for.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 				ForceNew:     true,
 			},
-			"provider_short_name": &schema.Schema{
+			"provider_short_name": {
+				Description:  "(Required) The short name of the cloud provider that the `account_id` is in. This must be one of \"AWS\", \"GCE\", or \"MSAZ\".  Other cloud providers are supported but have not been tested so they are not in the list of valid options.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{"AWS", "GCE", "MSAZ"}, false),
 			},
-			"gold_images": &schema.Schema{
-				Type:     schema.TypeSet,
-				Optional: true,
+			"gold_images": {
+				Description: "A list of gold images to request access to for the account. Images available to a cloud provider can be found with the `rhsm_cloud_access` data source.",
+				Type:        schema.TypeSet,
+				Optional:    true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
-			"nickname": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "",
+			"nickname": {
+				Description: "A nickname to help describe the account.",
+				Type:        schema.TypeString,
+				Optional:    true,
+				Default:     "",
 			},
-			"date_added": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
+			"date_added": {
+				Description: "The date the cloud account was added to Red Hat Cloud Access.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
-			"gold_image_status": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
+			"gold_image_status": {
+				Description: "The status of requests for access to gold images.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 		},
 	}
 }
 
-func resourceCloudAccessAccountRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudAccessAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*apiClient).Client
 	auth := meta.(*apiClient).Auth
 
@@ -59,7 +71,7 @@ func resourceCloudAccessAccountRead(d *schema.ResourceData, meta interface{}) er
 
 	cap, _, err := client.CloudaccessApi.ListEnabledCloudAccessProviders(auth).Execute()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	for _, x := range *cap.Body {
@@ -83,7 +95,7 @@ func resourceCloudAccessAccountRead(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
-func resourceCloudAccessAccountCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudAccessAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*apiClient).Client
 	auth := meta.(*apiClient).Auth
 
@@ -99,7 +111,7 @@ func resourceCloudAccessAccountCreate(d *schema.ResourceData, meta interface{}) 
 
 	_, err := client.CloudaccessApi.AddProviderAccounts(auth, shortName).Account(accountList).Execute()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(id)
@@ -118,14 +130,14 @@ func resourceCloudAccessAccountCreate(d *schema.ResourceData, meta interface{}) 
 		_, err = client.CloudaccessApi.EnableGoldImages(auth, shortName).GoldImages(*gi).Execute()
 		if err != nil {
 			d.Set("gold_images", []string{})
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
-	return nil
+	return resourceCloudAccessAccountRead(ctx, d, meta)
 }
 
-func resourceCloudAccessAccountUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudAccessAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*apiClient).Client
 	auth := meta.(*apiClient).Auth
 
@@ -145,7 +157,7 @@ func resourceCloudAccessAccountUpdate(d *schema.ResourceData, meta interface{}) 
 	if nameChange {
 		_, err := client.CloudaccessApi.UpdateProviderAccount(auth, shortName, accountID).Account(*account).Execute()
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if d.HasChange("account_id") {
@@ -168,15 +180,15 @@ func resourceCloudAccessAccountUpdate(d *schema.ResourceData, meta interface{}) 
 			_, err := client.CloudaccessApi.EnableGoldImages(auth, shortName).GoldImages(*gi).Execute()
 			if err != nil {
 				d.Set("gold_images", []string{})
-				return err
+				return diag.FromErr(err)
 			}
 		}
 	}
 
-	return nil
+	return resourceCloudAccessAccountRead(ctx, d, meta)
 }
 
-func resourceCloudAccessAccountDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCloudAccessAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*apiClient).Client
 	auth := meta.(*apiClient).Auth
 
@@ -189,7 +201,7 @@ func resourceCloudAccessAccountDelete(d *schema.ResourceData, meta interface{}) 
 
 	_, err := client.CloudaccessApi.RemoveProviderAccount(auth, shortName).Account(*remove).Execute()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

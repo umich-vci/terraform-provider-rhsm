@@ -1,42 +1,51 @@
 package provider
 
 import (
-	"fmt"
+	"context"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func dataSourceAllocationEntitlement() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAllocationEntitlementRead,
+		Description: "Data source to get information about an entitlement associated with a Red Hat Subscription Manager allocation.",
+
+		ReadContext: dataSourceAllocationEntitlementRead,
+
 		Schema: map[string]*schema.Schema{
-			"entitlement_id": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+			"entitlement_id": {
+				Description: "The ID of the entitlement to look up in the specified allocation.",
+				Type:        schema.TypeString,
+				Required:    true,
 			},
-			"allocation_uuid": &schema.Schema{
+			"allocation_uuid": {
+				Description:  "The UUID of the subscription allocation to create the entitlement on.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.IsUUID,
 			},
 			"contract_number": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "The support contract associated with the entitlement.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
-			"quantity": &schema.Schema{
-				Type:     schema.TypeInt,
-				Computed: true,
+			"quantity": {
+				Description: "The number of entitlements available in the pool.",
+				Type:        schema.TypeInt,
+				Computed:    true,
 			},
 			"sku": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "The SKU of the entitlement.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 		},
 	}
 }
 
-func dataSourceAllocationEntitlementRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAllocationEntitlementRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*apiClient).Client
 	auth := meta.(*apiClient).Auth
 
@@ -46,7 +55,7 @@ func dataSourceAllocationEntitlementRead(d *schema.ResourceData, meta interface{
 
 	alloc, _, err := client.AllocationApi.ShowAllocation(auth, allocationUUID).Include(include).Execute()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(entitlementID)
@@ -63,7 +72,7 @@ func dataSourceAllocationEntitlementRead(d *schema.ResourceData, meta interface{
 	}
 
 	if !entitlementFound {
-		return fmt.Errorf("Allocation %s does not have an entitlement with id %s", allocationUUID, entitlementID)
+		return diag.Errorf("Allocation %s does not have an entitlement with id %s", allocationUUID, entitlementID)
 	}
 
 	return nil

@@ -1,51 +1,61 @@
 package provider
 
 import (
-	"fmt"
+	"context"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAllocationEntitlement() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAllocationEntitlementCreate,
-		Read:   resourceAllocationEntitlementRead,
-		Update: resourceAllocationEntitlementUpdate,
-		Delete: resourceAllocationEntitlementDelete,
+		Description: "Resource to manage entitlements to a RHSM Subscription Allocation for a Red Hat Satellite server.",
+
+		CreateContext: resourceAllocationEntitlementCreate,
+		ReadContext:   resourceAllocationEntitlementRead,
+		UpdateContext: resourceAllocationEntitlementUpdate,
+		DeleteContext: resourceAllocationEntitlementDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
 		Schema: map[string]*schema.Schema{
-			"pool": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+			"pool": {
+				Description: "The ID of the pool you would like to create the entitlement from.",
+				Type:        schema.TypeString,
+				Required:    true,
+				ForceNew:    true,
 			},
-			"quantity": &schema.Schema{
+			"quantity": {
+				Description:  "The number of entitlements you would like add to the allocation/use from the pool.",
 				Type:         schema.TypeInt,
 				Required:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
-			"allocation_uuid": &schema.Schema{
+			"allocation_uuid": {
+				Description:  "The UUID of the subscription allocation to create the entitlement on.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.IsUUID,
 				ForceNew:     true,
 			},
 			"contract_number": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "The support contract associated with the entitlement.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 			"sku": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Description: "The SKU of the entitlement.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 		},
 	}
 }
 
-func resourceAllocationEntitlementRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAllocationEntitlementRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*apiClient).Client
 	auth := meta.(*apiClient).Auth
 
@@ -61,7 +71,7 @@ func resourceAllocationEntitlementRead(d *schema.ResourceData, meta interface{})
 				return nil
 			}
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	entitlementFound := false
@@ -82,7 +92,7 @@ func resourceAllocationEntitlementRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceAllocationEntitlementCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAllocationEntitlementCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*apiClient).Client
 	auth := meta.(*apiClient).Auth
 
@@ -91,7 +101,7 @@ func resourceAllocationEntitlementCreate(d *schema.ResourceData, meta interface{
 
 	pools, _, err := client.AllocationApi.ListAllocationPools(auth, allocationUUID).Execute()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	poolFound := false
@@ -105,14 +115,14 @@ func resourceAllocationEntitlementCreate(d *schema.ResourceData, meta interface{
 		}
 	}
 	if !poolFound {
-		return fmt.Errorf("Allocation %s does not have pool with id %s", allocationUUID, pool)
+		return diag.Errorf("Allocation %s does not have pool with id %s", allocationUUID, pool)
 	}
 
 	quantity := int32(d.Get("quantity").(int))
 
 	alloc, _, err := client.AllocationApi.AttachEntitlementAllocation(auth, allocationUUID).Quantity(quantity).Pool(pool).Execute()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	entitlementFound := false
@@ -123,13 +133,13 @@ func resourceAllocationEntitlementCreate(d *schema.ResourceData, meta interface{
 		}
 	}
 	if !entitlementFound {
-		return fmt.Errorf("Unable to find entitlement that was created")
+		return diag.Errorf("Unable to find entitlement that was created")
 	}
 
-	return resourceAllocationEntitlementRead(d, meta)
+	return resourceAllocationEntitlementRead(ctx, d, meta)
 }
 
-func resourceAllocationEntitlementUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAllocationEntitlementUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*apiClient).Client
 	auth := meta.(*apiClient).Auth
 
@@ -139,13 +149,13 @@ func resourceAllocationEntitlementUpdate(d *schema.ResourceData, meta interface{
 
 	_, _, err := client.AllocationApi.UpdateEntitlementAllocation(auth, allocationUUID, entitlementID).Quantity(quantity).Execute()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	return resourceAllocationEntitlementRead(d, meta)
+	return resourceAllocationEntitlementRead(ctx, d, meta)
 }
 
-func resourceAllocationEntitlementDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAllocationEntitlementDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*apiClient).Client
 	auth := meta.(*apiClient).Auth
 
@@ -154,7 +164,7 @@ func resourceAllocationEntitlementDelete(d *schema.ResourceData, meta interface{
 
 	_, err := client.AllocationApi.RemoveAllocationEntitlement(auth, allocationUUID, entitlementID).Execute()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")

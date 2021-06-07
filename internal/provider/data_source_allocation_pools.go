@@ -1,63 +1,81 @@
 package provider
 
 import (
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func dataSourceAllocationPools() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAllocationPoolsRead,
+		Description: "Data source to get information about pools available to a Red Hat Subscription Manager allocation.",
+
+		ReadContext: dataSourceAllocationPoolsRead,
+
 		Schema: map[string]*schema.Schema{
-			"allocation_uuid": &schema.Schema{
+			"allocation_uuid": {
+				Description:  "The UUID of the subscription allocation.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.IsUUID,
 			},
-			"future": &schema.Schema{
-				Type:     schema.TypeBool,
-				Optional: true,
+			"future": {
+				Description: "Should pools only valid in the future be listed?",
+				Type:        schema.TypeBool,
+				Optional:    true,
 			},
-			"pools": &schema.Schema{
-				Type:     schema.TypeList,
-				Computed: true,
+			"pools": {
+				Description: "A list of pools available to the subscription allocation.",
+				Type:        schema.TypeList,
+				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"contract_number": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Description: "The support contract associated with the entitlement.",
+							Type:        schema.TypeString,
+							Computed:    true,
 						},
 						"end_date": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Description: "The date the support contract ends.",
+							Type:        schema.TypeString,
+							Computed:    true,
 						},
 						"entitlements_available": {
-							Type:     schema.TypeInt,
-							Computed: true,
+							Description: "The number of entitlements available from the pool.",
+							Type:        schema.TypeInt,
+							Computed:    true,
 						},
 						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Description: "The ID of the pool.",
+							Type:        schema.TypeString,
+							Computed:    true,
 						},
 						"service_level": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Description: "The service level of the support contract.",
+							Type:        schema.TypeString,
+							Computed:    true,
 						},
 						"sku": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Description: "The SKU of the entitlement.",
+							Type:        schema.TypeString,
+							Computed:    true,
 						},
 						"start_date": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Description: "The date the support contract starts.",
+							Type:        schema.TypeString,
+							Computed:    true,
 						},
 						"subscription_name": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Description: "The friendly name of the sku.",
+							Type:        schema.TypeString,
+							Computed:    true,
 						},
 						"subscription_number": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Description: "The subscription number.",
+							Type:        schema.TypeString,
+							Computed:    true,
 						},
 					},
 				},
@@ -66,7 +84,7 @@ func dataSourceAllocationPools() *schema.Resource {
 	}
 }
 
-func dataSourceAllocationPoolsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAllocationPoolsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*apiClient).Client
 	auth := meta.(*apiClient).Auth
 
@@ -79,7 +97,7 @@ func dataSourceAllocationPoolsRead(d *schema.ResourceData, meta interface{}) err
 
 	pools, _, err := client.AllocationApi.ListAllocationPools(auth, uuid).Future(future).Execute()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(uuid)
