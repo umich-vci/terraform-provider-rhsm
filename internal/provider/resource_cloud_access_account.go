@@ -1,4 +1,4 @@
-package rhsm
+package provider
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -50,10 +50,8 @@ func resourceCloudAccessAccount() *schema.Resource {
 }
 
 func resourceCloudAccessAccountRead(d *schema.ResourceData, meta interface{}) error {
-	client, auth, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
+	auth := meta.(*apiClient).Auth
 
 	id := d.Get("account_id").(string)
 	shortName := d.Get("provider_short_name").(string)
@@ -86,10 +84,8 @@ func resourceCloudAccessAccountRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceCloudAccessAccountCreate(d *schema.ResourceData, meta interface{}) error {
-	client, auth, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
+	auth := meta.(*apiClient).Auth
 
 	id := d.Get("account_id").(string)
 	shortName := d.Get("provider_short_name").(string)
@@ -101,7 +97,7 @@ func resourceCloudAccessAccountCreate(d *schema.ResourceData, meta interface{}) 
 	}
 	accountList := []gorhsm.AddProviderAccount{*account}
 
-	_, err = client.CloudaccessApi.AddProviderAccounts(auth, shortName).Account(accountList).Execute()
+	_, err := client.CloudaccessApi.AddProviderAccounts(auth, shortName).Account(accountList).Execute()
 	if err != nil {
 		return err
 	}
@@ -130,10 +126,8 @@ func resourceCloudAccessAccountCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceCloudAccessAccountUpdate(d *schema.ResourceData, meta interface{}) error {
-	client, auth, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
+	auth := meta.(*apiClient).Auth
 
 	id := d.Id()
 	shortName := d.Get("provider_short_name").(string)
@@ -149,7 +143,7 @@ func resourceCloudAccessAccountUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if nameChange {
-		_, err = client.CloudaccessApi.UpdateProviderAccount(auth, shortName, accountID).Account(*account).Execute()
+		_, err := client.CloudaccessApi.UpdateProviderAccount(auth, shortName, accountID).Account(*account).Execute()
 		if err != nil {
 			return err
 		}
@@ -171,7 +165,7 @@ func resourceCloudAccessAccountUpdate(d *schema.ResourceData, meta interface{}) 
 				Images:   goldimages,
 			}
 
-			_, err = client.CloudaccessApi.EnableGoldImages(auth, shortName).GoldImages(*gi).Execute()
+			_, err := client.CloudaccessApi.EnableGoldImages(auth, shortName).GoldImages(*gi).Execute()
 			if err != nil {
 				d.Set("gold_images", []string{})
 				return err
@@ -183,10 +177,8 @@ func resourceCloudAccessAccountUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceCloudAccessAccountDelete(d *schema.ResourceData, meta interface{}) error {
-	client, auth, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
+	auth := meta.(*apiClient).Auth
 
 	id := d.Id()
 	shortName := d.Get("provider_short_name").(string)
@@ -195,7 +187,7 @@ func resourceCloudAccessAccountDelete(d *schema.ResourceData, meta interface{}) 
 		Id: id,
 	}
 
-	_, err = client.CloudaccessApi.RemoveProviderAccount(auth, shortName).Account(*remove).Execute()
+	_, err := client.CloudaccessApi.RemoveProviderAccount(auth, shortName).Account(*remove).Execute()
 	if err != nil {
 		return err
 	}

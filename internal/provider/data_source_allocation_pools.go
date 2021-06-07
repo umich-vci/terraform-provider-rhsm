@@ -1,4 +1,4 @@
-package rhsm
+package provider
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -67,10 +67,8 @@ func dataSourceAllocationPools() *schema.Resource {
 }
 
 func dataSourceAllocationPoolsRead(d *schema.ResourceData, meta interface{}) error {
-	client, auth, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
+	auth := meta.(*apiClient).Auth
 
 	uuid := d.Get("allocation_uuid").(string)
 

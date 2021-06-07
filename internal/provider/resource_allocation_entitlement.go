@@ -1,4 +1,4 @@
-package rhsm
+package provider
 
 import (
 	"fmt"
@@ -46,10 +46,8 @@ func resourceAllocationEntitlement() *schema.Resource {
 }
 
 func resourceAllocationEntitlementRead(d *schema.ResourceData, meta interface{}) error {
-	client, auth, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
+	auth := meta.(*apiClient).Auth
 
 	allocationUUID := d.Get("allocation_uuid").(string)
 	entitlementID := d.Id()
@@ -85,10 +83,8 @@ func resourceAllocationEntitlementRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAllocationEntitlementCreate(d *schema.ResourceData, meta interface{}) error {
-	client, auth, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
+	auth := meta.(*apiClient).Auth
 
 	pool := d.Get("pool").(string)
 	allocationUUID := d.Get("allocation_uuid").(string)
@@ -134,16 +130,14 @@ func resourceAllocationEntitlementCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAllocationEntitlementUpdate(d *schema.ResourceData, meta interface{}) error {
-	client, auth, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
+	auth := meta.(*apiClient).Auth
 
 	allocationUUID := d.Get("allocation_uuid").(string)
 	entitlementID := d.Id()
 	quantity := int32(d.Get("quantity").(int))
 
-	_, _, err = client.AllocationApi.UpdateEntitlementAllocation(auth, allocationUUID, entitlementID).Quantity(quantity).Execute()
+	_, _, err := client.AllocationApi.UpdateEntitlementAllocation(auth, allocationUUID, entitlementID).Quantity(quantity).Execute()
 	if err != nil {
 		return err
 	}
@@ -152,15 +146,13 @@ func resourceAllocationEntitlementUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAllocationEntitlementDelete(d *schema.ResourceData, meta interface{}) error {
-	client, auth, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
+	auth := meta.(*apiClient).Auth
 
 	allocationUUID := d.Get("allocation_uuid").(string)
 	entitlementID := d.Id()
 
-	_, err = client.AllocationApi.RemoveAllocationEntitlement(auth, allocationUUID, entitlementID).Execute()
+	_, err := client.AllocationApi.RemoveAllocationEntitlement(auth, allocationUUID, entitlementID).Execute()
 	if err != nil {
 		return err
 	}
