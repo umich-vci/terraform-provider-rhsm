@@ -1,4 +1,4 @@
-package rhsm
+package provider
 
 import (
 	"encoding/base64"
@@ -46,10 +46,8 @@ func resourceAllocationManifest() *schema.Resource {
 }
 
 func resourceAllocationManifestRead(d *schema.ResourceData, meta interface{}) error {
-	client, auth, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
+	auth := meta.(*apiClient).Auth
 
 	uuid := d.Id()
 
@@ -70,10 +68,8 @@ func resourceAllocationManifestRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAllocationManifestCreate(d *schema.ResourceData, meta interface{}) error {
-	client, auth, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
+	auth := meta.(*apiClient).Auth
 
 	allocationUUID := d.Get("allocation_uuid").(string)
 

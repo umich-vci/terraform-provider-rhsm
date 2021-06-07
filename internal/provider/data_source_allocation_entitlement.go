@@ -1,4 +1,4 @@
-package rhsm
+package provider
 
 import (
 	"fmt"
@@ -37,10 +37,8 @@ func dataSourceAllocationEntitlement() *schema.Resource {
 }
 
 func dataSourceAllocationEntitlementRead(d *schema.ResourceData, meta interface{}) error {
-	client, auth, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
+	auth := meta.(*apiClient).Auth
 
 	allocationUUID := d.Get("allocation_uuid").(string)
 	entitlementID := d.Get("entitlement_id").(string)

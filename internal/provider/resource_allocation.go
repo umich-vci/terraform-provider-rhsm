@@ -1,4 +1,4 @@
-package rhsm
+package provider
 
 import (
 	"regexp"
@@ -74,10 +74,8 @@ func resourceAllocation() *schema.Resource {
 }
 
 func resourceAllocationRead(d *schema.ResourceData, meta interface{}) error {
-	client, auth, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
+	auth := meta.(*apiClient).Auth
 
 	uuid := d.Id()
 	include := "entitlements"
@@ -113,10 +111,8 @@ func resourceAllocationRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAllocationCreate(d *schema.ResourceData, meta interface{}) error {
-	client, auth, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
+	auth := meta.(*apiClient).Auth
 
 	name := d.Get("name").(string)
 
@@ -135,14 +131,12 @@ func resourceAllocationUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAllocationDelete(d *schema.ResourceData, meta interface{}) error {
-	client, auth, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
+	auth := meta.(*apiClient).Auth
 
 	uuid := d.Id()
 
-	_, err = client.AllocationApi.RemoveAllocation(auth, uuid).Force(true).Execute()
+	_, err := client.AllocationApi.RemoveAllocation(auth, uuid).Force(true).Execute()
 	if err != nil {
 		return err
 	}

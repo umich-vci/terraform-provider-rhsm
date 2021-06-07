@@ -1,4 +1,4 @@
-package rhsm
+package provider
 
 import (
 	"time"
@@ -88,10 +88,8 @@ func dataSourceCloudAccess() *schema.Resource {
 }
 
 func dataSourceCloudAccessRead(d *schema.ResourceData, meta interface{}) error {
-	client, auth, err := meta.(*Config).Client()
-	if err != nil {
-		return err
-	}
+	client := meta.(*apiClient).Client
+	auth := meta.(*apiClient).Auth
 
 	cap, _, err := client.CloudaccessApi.ListEnabledCloudAccessProviders(auth).Execute()
 	if err != nil {
