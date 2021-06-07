@@ -1,84 +1,104 @@
 package provider
 
 import (
+	"context"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceCloudAccess() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCloudAccessRead,
+		Description: "Data source to look up information about cloud providers entitled to Red Hat Cloud Access.",
+
+		ReadContext: dataSourceCloudAccessRead,
+
 		Schema: map[string]*schema.Schema{
-			"enabled_accounts": &schema.Schema{
-				Type:     schema.TypeList,
-				Computed: true,
+			"enabled_accounts": {
+				Description: "A list where each entry is a single cloud provider",
+				Type:        schema.TypeList,
+				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"accounts": {
-							Type:     schema.TypeList,
-							Computed: true,
+							Description: "A list of cloud accounts that are enabled for cloud access in the cloud provider.",
+							Type:        schema.TypeList,
+							Computed:    true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Description: "The id of the cloud account.",
+										Type:        schema.TypeString,
+										Computed:    true,
 									},
 									"date_added": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Description: "The date the account was added to cloud access.",
+										Type:        schema.TypeString,
+										Computed:    true,
 									},
 									"gold_image_status": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Description: "The status of any requests for gold image access for a cloud account.",
+										Type:        schema.TypeString,
+										Computed:    true,
 									},
 									"nickname": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Description: "A nickname associated with the cloud account.",
+										Type:        schema.TypeString,
+										Computed:    true,
 									},
 								},
 							},
 						},
 						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Description: "The name of the cloud provider.",
+							Type:        schema.TypeString,
+							Computed:    true,
 						},
 						"products": {
-							Type:     schema.TypeList,
-							Computed: true,
+							Description: "A list of products that are entitled to the cloud provider.",
+							Type:        schema.TypeList,
+							Computed:    true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"enabled_quantity": {
-										Type:     schema.TypeInt,
-										Computed: true,
+										Description: "The quantity of subscriptions allowed to be consumed by the cloud provider.",
+										Type:        schema.TypeInt,
+										Computed:    true,
 									},
 									"image_groups": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem:     schema.TypeString,
+										Description: "A list of images associated with the cloud provider. These are used when requesting access to gold images for a cloud account.",
+										Type:        schema.TypeList,
+										Computed:    true,
+										Elem:        schema.TypeString,
 									},
 									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Description: "The name of the product.",
+										Type:        schema.TypeString,
+										Computed:    true,
 									},
 									"next_renewal": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Description: "The renewal date of the subscription.",
+										Type:        schema.TypeString,
+										Computed:    true,
 									},
 									"sku": {
-										Type:     schema.TypeString,
-										Computed: true,
+										Description: "The SKU of the product.",
+										Type:        schema.TypeString,
+										Computed:    true,
 									},
 									"total_quantity": {
-										Type:     schema.TypeInt,
-										Computed: true,
+										Description: "The total number of subscriptions of the product available.",
+										Type:        schema.TypeInt,
+										Computed:    true,
 									},
 								},
 							},
 						},
 						"short_name": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Description: "An abreviation of the cloud provider name. Used when adding or removing accounts.",
+							Type:        schema.TypeString,
+							Computed:    true,
 						},
 					},
 				},
@@ -87,13 +107,13 @@ func dataSourceCloudAccess() *schema.Resource {
 	}
 }
 
-func dataSourceCloudAccessRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCloudAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*apiClient).Client
 	auth := meta.(*apiClient).Auth
 
 	cap, _, err := client.CloudaccessApi.ListEnabledCloudAccessProviders(auth).Execute()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	cloudProviders := make([]map[string]interface{}, 0)

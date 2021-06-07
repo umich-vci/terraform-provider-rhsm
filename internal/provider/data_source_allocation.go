@@ -1,59 +1,76 @@
 package provider
 
 import (
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func dataSourceAllocation() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAllocationRead,
+		Description: "Data source to look up a RHSM Subscription allocation.",
+
+		ReadContext: dataSourceAllocationRead,
+
 		Schema: map[string]*schema.Schema{
-			"uuid": &schema.Schema{
+			"uuid": {
+				Description:  "The UUID of the subscription allocation to look up.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.IsUUID,
 			},
-			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
+			"name": {
+				Description: "The name of the subscription allocation.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
-			"type": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
+			"type": {
+				Description: "The type of the subscription allocation.  The only one supported by this resource is `Satellite`.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
-			"version": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
+			"version": {
+				Description: "The version of the subscription allocation type.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
-			"created_date": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
+			"created_date": {
+				Description: "The date and time the subscription allocation was created.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
-			"created_by": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
+			"created_by": {
+				Description: "The user account used to create the subscription allocation.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
-			"last_modified": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
+			"last_modified": {
+				Description: "The date and time the subscription allocation was last modified.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
-			"entitlements_attached_quantity": &schema.Schema{
-				Type:     schema.TypeInt,
-				Computed: true,
+			"entitlements_attached_quantity": {
+				Description: "The number of entitlements associated with the subscription",
+				Type:        schema.TypeInt,
+				Computed:    true,
 			},
-			"entitlements_attached": &schema.Schema{
-				Type:     schema.TypeList,
-				Computed: true,
+			"entitlements_attached": {
+				Description: "A list of entitlements attached to the subscription allocation.",
+				Type:        schema.TypeList,
+				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"reason": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Description: "The reason for the value of `valid`.",
+							Type:        schema.TypeString,
+							Computed:    true,
 						},
 						"valid": {
-							Type:     schema.TypeBool,
-							Computed: true,
+							Description: "If the entitlements associated with the subscription allocation are valid or not.",
+							Type:        schema.TypeBool,
+							Computed:    true,
 						},
 					},
 				},
@@ -62,7 +79,7 @@ func dataSourceAllocation() *schema.Resource {
 	}
 }
 
-func dataSourceAllocationRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAllocationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*apiClient).Client
 	auth := meta.(*apiClient).Auth
 
@@ -71,7 +88,7 @@ func dataSourceAllocationRead(d *schema.ResourceData, meta interface{}) error {
 
 	alloc, _, err := client.AllocationApi.ShowAllocation(auth, uuid).Include(include).Execute()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(*alloc.Body.Uuid)

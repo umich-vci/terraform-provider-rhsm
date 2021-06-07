@@ -1,8 +1,10 @@
 package provider
 
 import (
+	"context"
 	"regexp"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -11,60 +13,74 @@ var nameRegex, _ = regexp.Compile("^[a-zA-Z0-9\\_\\-\\.]{1,100}$")
 
 func resourceAllocation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAllocationCreate,
-		Read:   resourceAllocationRead,
-		//Update: resourceAllocationUpdate,
-		Delete: resourceAllocationDelete,
+		Description: "Resource to manage a RHSM Subscription allocation for a Red Hat Satellite server.",
+
+		CreateContext: resourceAllocationCreate,
+		ReadContext:   resourceAllocationRead,
+		DeleteContext: resourceAllocationDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
+				Description:  "The name of the subscription allocation.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(nameRegex, "name must be less than 100 characters and can use only numbers, letters, underscores, hyphens, and periods"),
 			},
-			"uuid": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
+			"uuid": {
+				Description: "The UUID of the subscription allocation that was created.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
-			"type": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
+			"type": {
+				Description: "The type of the subscription allocation.  The only one supported by this resource is `Satellite`.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
-			"version": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
+			"version": {
+				Description: "The version of the subscription allocation type.  This defaults in the API to 6.5 and cannot be set through the API. It can be adjusted in the RHSM portal.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
-			"created_date": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
+			"created_date": {
+				Description: "The date and time the subscription allocation was created.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
-			"created_by": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
+			"created_by": {
+				Description: "The user account used to create the subscription allocation.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
-			"last_modified": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
+			"last_modified": {
+				Description: "The date and time the subscription allocation was last modified.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
-			"entitlements_attached_quantity": &schema.Schema{
-				Type:     schema.TypeInt,
-				Computed: true,
+			"entitlements_attached_quantity": {
+				Description: "The number of entitlements associated with the subscription",
+				Type:        schema.TypeInt,
+				Computed:    true,
 			},
-			"entitlements_attached": &schema.Schema{
-				Type:     schema.TypeList,
-				Computed: true,
+			"entitlements_attached": {
+				Description: "",
+				Type:        schema.TypeList,
+				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"reason": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Description: "The reason for the value of `valid`.",
+							Type:        schema.TypeString,
+							Computed:    true,
 						},
 						"valid": {
-							Type:     schema.TypeBool,
-							Computed: true,
+							Description: "If the entitlements associated with the subscription allocation are valid or not.",
+							Type:        schema.TypeBool,
+							Computed:    true,
 						},
 					},
 				},
@@ -73,7 +89,7 @@ func resourceAllocation() *schema.Resource {
 	}
 }
 
-func resourceAllocationRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAllocationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*apiClient).Client
 	auth := meta.(*apiClient).Auth
 
@@ -88,7 +104,7 @@ func resourceAllocationRead(d *schema.ResourceData, meta interface{}) error {
 				return nil
 			}
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(*alloc.Body.Uuid)
@@ -110,7 +126,7 @@ func resourceAllocationRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAllocationCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAllocationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*apiClient).Client
 	auth := meta.(*apiClient).Auth
 
@@ -118,19 +134,15 @@ func resourceAllocationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	alloc, _, err := client.AllocationApi.CreateSatellite(auth).Name(name).Execute()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(*alloc.Body.Uuid)
 
-	return resourceAllocationRead(d, meta)
+	return resourceAllocationRead(ctx, d, meta)
 }
 
-func resourceAllocationUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceAllocationRead(d, meta)
-}
-
-func resourceAllocationDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAllocationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*apiClient).Client
 	auth := meta.(*apiClient).Auth
 
@@ -138,7 +150,7 @@ func resourceAllocationDelete(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := client.AllocationApi.RemoveAllocation(auth, uuid).Force(true).Execute()
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
