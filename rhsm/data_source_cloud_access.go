@@ -93,20 +93,20 @@ func dataSourceCloudAccessRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	cap, _, err := client.CloudaccessApi.ListEnabledCloudAccessProviders(auth)
+	cap, _, err := client.CloudaccessApi.ListEnabledCloudAccessProviders(auth).Execute()
 	if err != nil {
 		return err
 	}
 
 	cloudProviders := make([]map[string]interface{}, 0)
 
-	for _, x := range cap.Body {
+	for _, x := range *cap.Body {
 		cloudProvider := make(map[string]interface{})
-		cloudProvider["name"] = x.Name
-		cloudProvider["short_name"] = x.ShortName
+		cloudProvider["name"] = *x.Name
+		cloudProvider["short_name"] = *x.ShortName
 
 		accounts := make([]map[string]interface{}, 0)
-		for _, y := range x.Accounts {
+		for _, y := range *x.Accounts {
 			account := make(map[string]interface{})
 			account["id"] = y.Id
 			account["nickname"] = y.Nickname
@@ -117,7 +117,7 @@ func dataSourceCloudAccessRead(d *schema.ResourceData, meta interface{}) error {
 		cloudProvider["accounts"] = accounts
 
 		products := make([]map[string]interface{}, 0)
-		for _, y := range x.Products {
+		for _, y := range *x.Products {
 			product := make(map[string]interface{})
 			product["name"] = y.Name
 			product["sku"] = y.Sku

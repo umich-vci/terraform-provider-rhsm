@@ -20,7 +20,7 @@ func (c *Config) Client() (*gorhsm.APIClient, context.Context, error) {
 		return nil, nil, err
 	}
 
-	auth := context.WithValue(context.Background(), gorhsm.ContextAPIKey, gorhsm.APIKey{
+	auth := context.WithValue(context.Background(), gorhsm.ContextAPIKeys, gorhsm.APIKey{
 		Key:    token.AccessToken,
 		Prefix: "Bearer", // Omit if not necessary.
 	})

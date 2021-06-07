@@ -1,10 +1,8 @@
 package rhsm
 
 import (
-	"github.com/antihax/optional"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/umich-vci/gorhsm"
 )
 
 func dataSourceAllocationPools() *schema.Resource {
@@ -76,13 +74,12 @@ func dataSourceAllocationPoolsRead(d *schema.ResourceData, meta interface{}) err
 
 	uuid := d.Get("allocation_uuid").(string)
 
-	opts := &gorhsm.ListAllocationPoolsOpts{}
-
+	future := false
 	if b, ok := d.GetOk("future"); ok {
-		opts.Future = optional.NewBool(b.(bool))
+		future = b.(bool)
 	}
 
-	pools, _, err := client.AllocationApi.ListAllocationPools(auth, uuid, opts)
+	pools, _, err := client.AllocationApi.ListAllocationPools(auth, uuid).Future(future).Execute()
 	if err != nil {
 		return err
 	}
@@ -90,17 +87,17 @@ func dataSourceAllocationPoolsRead(d *schema.ResourceData, meta interface{}) err
 	d.SetId(uuid)
 
 	poolsList := []map[string]interface{}{}
-	for _, x := range pools.Body {
+	for _, x := range *pools.Body {
 		pool := make(map[string]interface{})
-		pool["contract_number"] = x.ContractNumber
-		pool["end_date"] = x.EndDate
-		pool["entitlements_available"] = x.EntitlementsAvailable
-		pool["id"] = x.Id
-		pool["service_level"] = x.ServiceLevel
-		pool["sku"] = x.Sku
-		pool["start_date"] = x.StartDate
-		pool["subscription_name"] = x.SubscriptionName
-		pool["subscription_number"] = x.SubscriptionNumber
+		pool["contract_number"] = *x.ContractNumber
+		pool["end_date"] = *x.EndDate
+		pool["entitlements_available"] = *x.EntitlementsAvailable
+		pool["id"] = *x.Id
+		pool["service_level"] = *x.ServiceLevel
+		pool["sku"] = *x.Sku
+		pool["start_date"] = *x.StartDate
+		pool["subscription_name"] = *x.SubscriptionName
+		pool["subscription_number"] = *x.SubscriptionNumber
 
 		poolsList = append(poolsList, pool)
 

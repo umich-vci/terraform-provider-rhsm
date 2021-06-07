@@ -3,10 +3,8 @@ package rhsm
 import (
 	"regexp"
 
-	"github.com/antihax/optional"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/umich-vci/gorhsm"
 )
 
 var nameRegex, _ = regexp.Compile("^[a-zA-Z0-9\\_\\-\\.]{1,100}$")
@@ -82,14 +80,9 @@ func resourceAllocationRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	uuid := d.Id()
+	include := "entitlements"
 
-	optional.NewString("entitlements")
-
-	opts := &gorhsm.ShowAllocationOpts{
-		Include: optional.NewString("entitlements"),
-	}
-
-	alloc, resp, err := client.AllocationApi.ShowAllocation(auth, uuid, opts)
+	alloc, resp, err := client.AllocationApi.ShowAllocation(auth, uuid).Include(include).Execute()
 	if err != nil {
 		if resp != nil {
 			if resp.StatusCode == 404 {
@@ -100,19 +93,19 @@ func resourceAllocationRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.SetId(alloc.Body.Uuid)
-	d.Set("name", alloc.Body.Name)
-	d.Set("uuid", alloc.Body.Uuid)
-	d.Set("type", alloc.Body.Type)
-	d.Set("version", alloc.Body.Version)
-	d.Set("created_date", alloc.Body.CreatedDate)
-	d.Set("created_by", alloc.Body.CreatedBy)
-	d.Set("last_modified", alloc.Body.LastModified)
-	d.Set("entitlements_attached_quantity", alloc.Body.EntitlementsAttachedQuantity)
+	d.SetId(*alloc.Body.Uuid)
+	d.Set("name", *alloc.Body.Name)
+	d.Set("uuid", *alloc.Body.Uuid)
+	d.Set("type", *alloc.Body.Type)
+	d.Set("version", *alloc.Body.Version)
+	d.Set("created_date", *alloc.Body.CreatedDate)
+	d.Set("created_by", *alloc.Body.CreatedBy)
+	d.Set("last_modified", *alloc.Body.LastModified)
+	d.Set("entitlements_attached_quantity", *alloc.Body.EntitlementsAttachedQuantity)
 
 	entitlementsAttached := make(map[string]interface{})
-	entitlementsAttached["reason"] = alloc.Body.EntitlementsAttached.Reason
-	entitlementsAttached["valid"] = alloc.Body.EntitlementsAttached.Valid
+	entitlementsAttached["reason"] = *alloc.Body.EntitlementsAttached.Reason
+	entitlementsAttached["valid"] = *alloc.Body.EntitlementsAttached.Valid
 	entitlementsAttachedList := []map[string]interface{}{entitlementsAttached}
 	d.Set("entitlements_attached", entitlementsAttachedList)
 
@@ -127,12 +120,12 @@ func resourceAllocationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	name := d.Get("name").(string)
 
-	alloc, _, err := client.AllocationApi.CreateSatellite(auth, name)
+	alloc, _, err := client.AllocationApi.CreateSatellite(auth).Name(name).Execute()
 	if err != nil {
 		return err
 	}
 
-	d.SetId(alloc.Body.Uuid)
+	d.SetId(*alloc.Body.Uuid)
 
 	return resourceAllocationRead(d, meta)
 }
@@ -149,7 +142,7 @@ func resourceAllocationDelete(d *schema.ResourceData, meta interface{}) error {
 
 	uuid := d.Id()
 
-	_, err = client.AllocationApi.RemoveAllocation(auth, uuid, true)
+	_, err = client.AllocationApi.RemoveAllocation(auth, uuid).Force(true).Execute()
 	if err != nil {
 		return err
 	}
