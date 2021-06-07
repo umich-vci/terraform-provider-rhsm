@@ -39,12 +39,41 @@ func dataSourceCloudAccess() *schema.Resource {
 									},
 									"gold_image_status": {
 										Description: "The status of any requests for gold image access for a cloud account.",
-										Type:        schema.TypeString,
+										Type:        schema.TypeList,
 										Computed:    true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"description": {
+													Description: "The description of the gold image.",
+													Type:        schema.TypeString,
+													Computed:    true,
+												},
+												"name": {
+													Description: "The name of the gold image.",
+													Type:        schema.TypeString,
+													Computed:    true,
+												},
+												"status": {
+													Description: "The status of the gold image request.",
+													Type:        schema.TypeString,
+													Computed:    true,
+												},
+											},
+										},
 									},
 									"nickname": {
 										Description: "A nickname associated with the cloud account.",
 										Type:        schema.TypeString,
+										Computed:    true,
+									},
+									"source_id": {
+										Description: "TODO",
+										Type:        schema.TypeString,
+										Computed:    true,
+									},
+									"verified": {
+										Description: "TODO",
+										Type:        schema.TypeBool,
 										Computed:    true,
 									},
 								},
@@ -129,7 +158,24 @@ func dataSourceCloudAccessRead(ctx context.Context, d *schema.ResourceData, meta
 			account["id"] = y.Id
 			account["nickname"] = y.Nickname
 			account["date_added"] = y.DateAdded
-			account["gold_image_status"] = y.GoldImageStatus
+			if y.SourceId != nil {
+				account["source_id"] = *y.SourceId
+			}
+			if y.Verified != nil {
+				account["verified"] = *y.Verified
+			}
+
+			goldImages := make([]map[string]interface{}, 0)
+			if y.GoldImageStatus != nil {
+				for _, z := range *y.GoldImageStatus {
+					goldImage := make(map[string]interface{})
+					goldImage["description"] = *z.Description
+					goldImage["name"] = *z.Name
+					goldImage["status"] = *z.Status
+					goldImages = append(goldImages, goldImage)
+				}
+			}
+			account["gold_image_status"] = goldImages
 			accounts = append(accounts, account)
 		}
 		cloudProvider["accounts"] = accounts
@@ -137,12 +183,16 @@ func dataSourceCloudAccessRead(ctx context.Context, d *schema.ResourceData, meta
 		products := make([]map[string]interface{}, 0)
 		for _, y := range *x.Products {
 			product := make(map[string]interface{})
-			product["name"] = y.Name
-			product["sku"] = y.Sku
-			product["enabled_quantity"] = y.EnabledQuantity
-			product["total_quantity"] = y.TotalQuantity
-			product["image_groups"] = y.ImageGroups
-			product["next_renewal"] = y.NextRenewal
+			product["name"] = *y.Name
+			product["sku"] = *y.Sku
+			product["enabled_quantity"] = int(*y.EnabledQuantity)
+			product["total_quantity"] = int(*y.TotalQuantity)
+			if y.ImageGroups != nil {
+				product["image_groups"] = *y.ImageGroups
+			}
+			if y.NextRenewal != nil {
+				product["next_renewal"] = *y.NextRenewal
+			}
 			products = append(products, product)
 		}
 		cloudProvider["products"] = products
