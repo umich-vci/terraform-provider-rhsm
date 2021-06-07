@@ -31,10 +31,10 @@ func New(version string) func() *schema.Provider {
 		p := &schema.Provider{
 			Schema: map[string]*schema.Schema{
 				"refresh_token": {
+					Description: "This is the [offline token](https://access.redhat.com/articles/3626371#bgenerating-a-new-offline-tokenb-3) used to generate access tokens for Red Hat Subscription Manager. This must be provided in the config or in the environment variable `RHSM_REFRESH_TOKEN`.",
 					Type:        schema.TypeString,
 					Required:    true,
 					DefaultFunc: schema.EnvDefaultFunc("RHSM_REFRESH_TOKEN", nil),
-					Description: "RHSM API Refresh Token",
 				},
 			},
 			DataSourcesMap: map[string]*schema.Resource{
