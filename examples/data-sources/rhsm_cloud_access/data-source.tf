@@ -1,0 +1,1 @@
+data "rhsm_cloud_access" "ca" {}
