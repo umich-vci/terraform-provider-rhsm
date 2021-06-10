@@ -28,7 +28,7 @@ func dataSourceAllocationPools() *schema.Resource {
 			},
 			"pools": {
 				Description: "A list of pools available to the subscription allocation.",
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -103,17 +103,17 @@ func dataSourceAllocationPoolsRead(ctx context.Context, d *schema.ResourceData, 
 	d.SetId(uuid)
 
 	poolsList := []map[string]interface{}{}
-	for _, x := range *pools.Body {
+	for _, x := range pools.GetBody() {
 		pool := make(map[string]interface{})
-		pool["contract_number"] = *x.ContractNumber
-		pool["end_date"] = *x.EndDate
-		pool["entitlements_available"] = *x.EntitlementsAvailable
-		pool["id"] = *x.Id
-		pool["service_level"] = *x.ServiceLevel
-		pool["sku"] = *x.Sku
-		pool["start_date"] = *x.StartDate
-		pool["subscription_name"] = *x.SubscriptionName
-		pool["subscription_number"] = *x.SubscriptionNumber
+		pool["contract_number"] = x.GetContractNumber()
+		pool["end_date"] = x.GetEndDate()
+		pool["entitlements_available"] = x.GetEntitlementsAvailable()
+		pool["id"] = x.GetId()
+		pool["service_level"] = x.GetServiceLevel()
+		pool["sku"] = x.GetSku()
+		pool["start_date"] = x.GetStartDate()
+		pool["subscription_name"] = x.GetSubscriptionName()
+		pool["subscription_number"] = x.GetSubscriptionNumber()
 
 		poolsList = append(poolsList, pool)
 

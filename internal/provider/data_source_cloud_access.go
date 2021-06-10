@@ -17,13 +17,13 @@ func dataSourceCloudAccess() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"enabled_accounts": {
 				Description: "A list where each entry is a single cloud provider",
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"accounts": {
 							Description: "A list of cloud accounts that are enabled for cloud access in the cloud provider.",
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Computed:    true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -39,7 +39,7 @@ func dataSourceCloudAccess() *schema.Resource {
 									},
 									"gold_image_status": {
 										Description: "The status of any requests for gold image access for a cloud account.",
-										Type:        schema.TypeList,
+										Type:        schema.TypeSet,
 										Computed:    true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -67,12 +67,12 @@ func dataSourceCloudAccess() *schema.Resource {
 										Computed:    true,
 									},
 									"source_id": {
-										Description: "TODO",
+										Description: "Source ID of linked account. Only for accounts created via Sources on cloud.redhat.com.",
 										Type:        schema.TypeString,
 										Computed:    true,
 									},
 									"verified": {
-										Description: "TODO",
+										Description: "Is the cloud provider account verified for RHSM Auto Registration?",
 										Type:        schema.TypeBool,
 										Computed:    true,
 									},
@@ -86,7 +86,7 @@ func dataSourceCloudAccess() *schema.Resource {
 						},
 						"products": {
 							Description: "A list of products that are entitled to the cloud provider.",
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Computed:    true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -147,31 +147,27 @@ func dataSourceCloudAccessRead(ctx context.Context, d *schema.ResourceData, meta
 
 	cloudProviders := make([]map[string]interface{}, 0)
 
-	for _, x := range *cap.Body {
+	for _, x := range cap.GetBody() {
 		cloudProvider := make(map[string]interface{})
-		cloudProvider["name"] = *x.Name
-		cloudProvider["short_name"] = *x.ShortName
+		cloudProvider["name"] = x.GetName()
+		cloudProvider["short_name"] = x.GetShortName()
 
 		accounts := make([]map[string]interface{}, 0)
-		for _, y := range *x.Accounts {
+		for _, y := range x.GetAccounts() {
 			account := make(map[string]interface{})
-			account["id"] = y.Id
-			account["nickname"] = y.Nickname
-			account["date_added"] = y.DateAdded
-			if y.SourceId != nil {
-				account["source_id"] = *y.SourceId
-			}
-			if y.Verified != nil {
-				account["verified"] = *y.Verified
-			}
+			account["id"] = y.GetId()
+			account["nickname"] = y.GetNickname()
+			account["date_added"] = y.GetDateAdded()
+			account["source_id"] = y.GetSourceId()
+			account["verified"] = y.GetVerified()
 
 			goldImages := make([]map[string]interface{}, 0)
 			if y.GoldImageStatus != nil {
-				for _, z := range *y.GoldImageStatus {
+				for _, z := range y.GetGoldImageStatus() {
 					goldImage := make(map[string]interface{})
-					goldImage["description"] = *z.Description
-					goldImage["name"] = *z.Name
-					goldImage["status"] = *z.Status
+					goldImage["description"] = z.GetDescription()
+					goldImage["name"] = z.GetName()
+					goldImage["status"] = z.GetStatus()
 					goldImages = append(goldImages, goldImage)
 				}
 			}
@@ -181,18 +177,14 @@ func dataSourceCloudAccessRead(ctx context.Context, d *schema.ResourceData, meta
 		cloudProvider["accounts"] = accounts
 
 		products := make([]map[string]interface{}, 0)
-		for _, y := range *x.Products {
+		for _, y := range x.GetProducts() {
 			product := make(map[string]interface{})
-			product["name"] = *y.Name
-			product["sku"] = *y.Sku
-			product["enabled_quantity"] = int(*y.EnabledQuantity)
-			product["total_quantity"] = int(*y.TotalQuantity)
-			if y.ImageGroups != nil {
-				product["image_groups"] = *y.ImageGroups
-			}
-			if y.NextRenewal != nil {
-				product["next_renewal"] = *y.NextRenewal
-			}
+			product["name"] = y.GetName()
+			product["sku"] = y.GetSku()
+			product["enabled_quantity"] = int(y.GetEnabledQuantity())
+			product["total_quantity"] = int(y.GetTotalQuantity())
+			product["image_groups"] = y.GetImageGroups()
+			product["next_renewal"] = y.GetNextRenewal()
 			products = append(products, product)
 		}
 		cloudProvider["products"] = products

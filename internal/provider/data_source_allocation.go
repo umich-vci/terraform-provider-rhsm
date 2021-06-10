@@ -58,7 +58,7 @@ func dataSourceAllocation() *schema.Resource {
 			},
 			"entitlements_attached": {
 				Description: "A list of entitlements attached to the subscription allocation.",
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -91,18 +91,18 @@ func dataSourceAllocationRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(err)
 	}
 
-	d.SetId(*alloc.Body.Uuid)
-	d.Set("name", *alloc.Body.Name)
-	d.Set("type", *alloc.Body.Type)
-	d.Set("version", *alloc.Body.Version)
-	d.Set("created_date", *alloc.Body.CreatedDate)
-	d.Set("created_by", *alloc.Body.CreatedBy)
-	d.Set("last_modified", *alloc.Body.LastModified)
-	d.Set("entitlements_attached_quantity", *alloc.Body.EntitlementsAttachedQuantity)
+	d.SetId(alloc.Body.GetUuid())
+	d.Set("name", alloc.Body.GetName())
+	d.Set("type", alloc.Body.GetType())
+	d.Set("version", alloc.Body.GetVersion())
+	d.Set("created_date", alloc.Body.GetCreatedDate())
+	d.Set("created_by", alloc.Body.GetCreatedBy())
+	d.Set("last_modified", alloc.Body.GetLastModified())
+	d.Set("entitlements_attached_quantity", alloc.Body.GetLastModified())
 
 	entitlementsAttached := make(map[string]interface{})
-	entitlementsAttached["reason"] = *alloc.Body.EntitlementsAttached.Reason
-	entitlementsAttached["valid"] = *alloc.Body.EntitlementsAttached.Valid
+	entitlementsAttached["reason"] = alloc.Body.EntitlementsAttached.GetReason()
+	entitlementsAttached["valid"] = alloc.Body.EntitlementsAttached.GetValid()
 	entitlementsAttachedList := []map[string]interface{}{entitlementsAttached}
 	d.Set("entitlements_attached", entitlementsAttachedList)
 

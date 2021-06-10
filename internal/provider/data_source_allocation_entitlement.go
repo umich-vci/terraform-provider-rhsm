@@ -21,7 +21,7 @@ func dataSourceAllocationEntitlement() *schema.Resource {
 				Required:    true,
 			},
 			"allocation_uuid": {
-				Description:  "The UUID of the subscription allocation to create the entitlement on.",
+				Description:  "The UUID of the subscription allocation containing the entitlement.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.IsUUID,
@@ -61,12 +61,12 @@ func dataSourceAllocationEntitlementRead(ctx context.Context, d *schema.Resource
 	d.SetId(entitlementID)
 
 	entitlementFound := false
-	for _, x := range *alloc.Body.EntitlementsAttached.Value {
-		if *x.Id == entitlementID {
+	for _, x := range alloc.Body.EntitlementsAttached.GetValue() {
+		if x.GetId() == entitlementID {
 			entitlementFound = true
-			d.Set("contract_number", *x.ContractNumber)
-			d.Set("quantity", *x.EntitlementQuantity)
-			d.Set("sku", *x.Sku)
+			d.Set("contract_number", x.GetContractNumber())
+			d.Set("quantity", x.GetEntitlementQuantity())
+			d.Set("sku", x.GetSku())
 
 		}
 	}

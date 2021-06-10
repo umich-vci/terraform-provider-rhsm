@@ -75,12 +75,12 @@ func resourceAllocationEntitlementRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	entitlementFound := false
-	for _, x := range *alloc.Body.EntitlementsAttached.Value {
-		if *x.Id == entitlementID {
+	for _, x := range alloc.Body.EntitlementsAttached.GetValue() {
+		if x.GetId() == entitlementID {
 			entitlementFound = true
-			d.Set("contract_number", *x.ContractNumber)
-			d.Set("quantity", *x.EntitlementQuantity)
-			d.Set("sku", *x.Sku)
+			d.Set("contract_number", x.GetContractNumber())
+			d.Set("quantity", x.GetEntitlementQuantity())
+			d.Set("sku", x.GetSku())
 
 		}
 	}
@@ -107,11 +107,11 @@ func resourceAllocationEntitlementCreate(ctx context.Context, d *schema.Resource
 	poolFound := false
 	var contractNumber string
 	var sku string
-	for _, x := range *pools.Body {
-		if *x.Id == pool {
+	for _, x := range pools.GetBody() {
+		if x.GetId() == pool {
 			poolFound = true
-			contractNumber = *x.ContractNumber
-			sku = *x.Sku
+			contractNumber = x.GetContractNumber()
+			sku = x.GetSku()
 		}
 	}
 	if !poolFound {
@@ -126,10 +126,10 @@ func resourceAllocationEntitlementCreate(ctx context.Context, d *schema.Resource
 	}
 
 	entitlementFound := false
-	for _, x := range *alloc.Body.EntitlementsAttached.Value {
-		if *x.ContractNumber == contractNumber && *x.Sku == sku {
+	for _, x := range alloc.Body.EntitlementsAttached.GetValue() {
+		if x.GetContractNumber() == contractNumber && x.GetSku() == sku {
 			entitlementFound = true
-			d.SetId(*x.Id)
+			d.SetId(x.GetId())
 		}
 	}
 	if !entitlementFound {
