@@ -27,11 +27,6 @@ func dataSourceCloudAccess() *schema.Resource {
 							Computed:    true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"id": {
-										Description: "The id of the cloud account.",
-										Type:        schema.TypeString,
-										Computed:    true,
-									},
 									"date_added": {
 										Description: "The date the account was added to cloud access.",
 										Type:        schema.TypeString,
@@ -60,6 +55,11 @@ func dataSourceCloudAccess() *schema.Resource {
 												},
 											},
 										},
+									},
+									"id": {
+										Description: "The id of the cloud account.",
+										Type:        schema.TypeString,
+										Computed:    true,
 									},
 									"nickname": {
 										Description: "A nickname associated with the cloud account.",
