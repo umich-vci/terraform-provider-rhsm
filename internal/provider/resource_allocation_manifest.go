@@ -71,7 +71,7 @@ func resourceAllocationManifestRead(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
-	d.Set("last_modified", alloc.Body.LastModified)
+	d.Set("last_modified", alloc.Body.GetLastModified())
 
 	return nil
 }
@@ -87,14 +87,14 @@ func resourceAllocationManifestCreate(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	d.Set("manifest_last_modified", alloc.Body.LastModified)
+	d.Set("manifest_last_modified", alloc.Body.GetLastModified())
 
 	exportJob, _, err := client.AllocationApi.ExportAllocation(auth, allocationUUID).Execute()
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	exportJobID := *exportJob.Body.ExportJobID
+	exportJobID := exportJob.Body.GetExportJobID()
 
 	var manifestURL string
 	for {
@@ -104,7 +104,7 @@ func resourceAllocationManifestCreate(ctx context.Context, d *schema.ResourceDat
 			return diag.FromErr(err)
 		}
 		if resp.StatusCode == 200 {
-			manifestURL = *status.Body.Href
+			manifestURL = status.Body.GetHref()
 			break
 		}
 	}
