@@ -8,8 +8,6 @@ import (
 )
 
 func TestAccResourceAllocation(t *testing.T) {
-	t.Skip("resource not yet implemented, remove this once you add your own code")
-
 	resource.UnitTest(t, resource.TestCase{
 		PreCheck:          func() { testAccPreCheck(t) },
 		ProviderFactories: providerFactories,
@@ -17,8 +15,10 @@ func TestAccResourceAllocation(t *testing.T) {
 			{
 				Config: testAccResourceAllocation,
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"rhsm_allocation.test", "name", "TerraformAcceptanceTestAllocation"),
 					resource.TestMatchResourceAttr(
-						"scaffolding_resource.foo", "sample_attribute", regexp.MustCompile("^ba")),
+						"rhsm_allocation.test", "uuid", regexp.MustCompile("[\\da-f]{8}-[\\da-f]{4}-[\\da-f]{4}-[\\da-f]{4}-[\\da-f]{12}")),
 				),
 			},
 		},
@@ -26,7 +26,7 @@ func TestAccResourceAllocation(t *testing.T) {
 }
 
 const testAccResourceAllocation = `
-resource "scaffolding_resource" "foo" {
-  sample_attribute = "bar"
-}
+resource "rhsm_allocation" "test" {
+	name = "TerraformAcceptanceTestAllocation"
+  }
 `
