@@ -1,5 +1,9 @@
 ## 0.3.0 (unreleased)
 
+BUG FIXES:
+
+* `datasource/rhsm_cloud_access` Fix crash due to goldImageStatus value changing in API ([#5]())
+
 ENHANCEMENTS:
 
 * Updated [terraform-plugin-sdk](https://github.com/umich-vci/gosatellite) to 2.6.1.
@@ -9,6 +13,8 @@ ENHANCEMENTS:
 
 * Added descriptions to resources and data sources to allow for usage in documentation
   generation and in the language server.
+
+* Added a few basic acceptance tests.
 
 ## 0.2.0 (October 16, 2020)
 
