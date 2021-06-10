@@ -2,7 +2,8 @@
 
 BUG FIXES:
 
-* `datasource/rhsm_cloud_access` Fix crash due to goldImageStatus value changing in API ([#5]())
+* `datasource/rhsm_cloud_access` Fix error due to goldImageStatus type changing in API ([#5]())
+* `resource/rhsm_cloud_access_account` Fix error due to goldImageStatus type changing in API ([#5]())
 
 ENHANCEMENTS:
 
