@@ -27,7 +27,7 @@ func resourceCloudAccessAccount() *schema.Resource {
 				ForceNew:     true,
 			},
 			"provider_short_name": {
-				Description:  "(Required) The short name of the cloud provider that the `account_id` is in. This must be one of \"AWS\", \"GCE\", or \"MSAZ\".  Other cloud providers are supported but have not been tested so they are not in the list of valid options.",
+				Description:  "The short name of the cloud provider that the `account_id` is in. This must be one of \"AWS\", \"GCE\", or \"MSAZ\".  Other cloud providers are supported but have not been tested so they are not in the list of valid options.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -53,8 +53,37 @@ func resourceCloudAccessAccount() *schema.Resource {
 				Computed:    true,
 			},
 			"gold_image_status": {
-				Description: "The status of requests for access to gold images.",
+				Description: "The status of any requests for gold image access for the cloud account.",
+				Type:        schema.TypeSet,
+				Computed:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"description": {
+							Description: "The description of the gold image.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"name": {
+							Description: "The name of the gold image.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"status": {
+							Description: "The status of the gold image request.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+					},
+				},
+			},
+			"source_id": {
+				Description: "Source ID of linked account. Only for accounts created via Sources on cloud.redhat.com.",
 				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"verified": {
+				Description: "Is the cloud provider account verified for RHSM Auto Registration?",
+				Type:        schema.TypeBool,
 				Computed:    true,
 			},
 		},
@@ -74,14 +103,25 @@ func resourceCloudAccessAccountRead(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
-	for _, x := range *cap.Body {
-		if *x.ShortName == shortName {
-			for _, y := range *x.Accounts {
+	for _, x := range cap.GetBody() {
+		if x.GetShortName() == shortName {
+			for _, y := range x.GetAccounts() {
 				if y.Id == id {
 					foundAccount = true
-					d.Set("nickname", y.Nickname)
-					d.Set("date_added", y.DateAdded)
-					d.Set("gold_image_status", y.GoldImageStatus)
+					d.Set("nickname", y.GetNickname())
+					d.Set("date_added", y.GetDateAdded())
+					d.Set("source_id", y.GetSourceId())
+					d.Set("verified", y.GetVerified())
+
+					goldImageStatus := make([]map[string]interface{}, 0)
+					for _, z := range y.GetGoldImageStatus() {
+						goldImage := make(map[string]interface{})
+						goldImage["description"] = z.GetDescription()
+						goldImage["name"] = z.GetName()
+						goldImage["status"] = z.GetStatus()
+						goldImageStatus = append(goldImageStatus, goldImage)
+					}
+					d.Set("gold_image_status", goldImageStatus)
 					break
 				}
 			}
@@ -145,23 +185,11 @@ func resourceCloudAccessAccountUpdate(ctx context.Context, d *schema.ResourceDat
 	shortName := d.Get("provider_short_name").(string)
 	accountID := d.Get("account_id").(string)
 
-	account := &gorhsm.InlineObject3{}
-
-	nameChange := false
-
 	if d.HasChange("nickname") {
-		nameChange = true
-		account.Nickname = d.Get("nickname").(string)
-	}
-
-	if nameChange {
+		account := &gorhsm.InlineObject3{Nickname: d.Get("nickname").(string)}
 		_, err := client.CloudaccessApi.UpdateProviderAccount(auth, shortName, accountID).Account(*account).Execute()
 		if err != nil {
 			return diag.FromErr(err)
-		}
-
-		if d.HasChange("account_id") {
-			d.SetId(d.Get("account_id").(string))
 		}
 	}
 
