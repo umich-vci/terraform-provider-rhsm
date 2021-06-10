@@ -33,12 +33,12 @@ func dataSourceAllocationPools() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"contract_number": {
-							Description: "The support contract associated with the entitlement.",
+							Description: "The subscription associated with the pool.",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
 						"end_date": {
-							Description: "The date the support contract ends.",
+							Description: "The date the subscription ends.",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
@@ -53,22 +53,22 @@ func dataSourceAllocationPools() *schema.Resource {
 							Computed:    true,
 						},
 						"service_level": {
-							Description: "The service level of the support contract.",
+							Description: "The service level of the subscription.",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
 						"sku": {
-							Description: "The SKU of the entitlement.",
+							Description: "The SKU of the subscription.",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
 						"start_date": {
-							Description: "The date the support contract starts.",
+							Description: "The date the subscription starts.",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
 						"subscription_name": {
-							Description: "The friendly name of the sku.",
+							Description: "The friendly name of the subscription.",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
