@@ -27,17 +27,32 @@ func dataSourceAllocationEntitlement() *schema.Resource {
 				ValidateFunc: validation.IsUUID,
 			},
 			"contract_number": {
-				Description: "The support contract associated with the entitlement.",
+				Description: "The subscription contract number.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"quantity": {
-				Description: "The number of entitlements available in the pool.",
+			"end_date": {
+				Description: "The date the subscription ends.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"entitlement_quantity": {
+				Description: "The quantity of the subscription available in the entitlement.",
 				Type:        schema.TypeInt,
 				Computed:    true,
 			},
 			"sku": {
-				Description: "The SKU of the entitlement.",
+				Description: "The SKU of the subscription.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"start_date": {
+				Description: "The date the subscription starts.",
+				Type:        schema.TypeString,
+				Computed:    true,
+			},
+			"subscription_name": {
+				Description: "The name of the subscription.",
 				Type:        schema.TypeString,
 				Computed:    true,
 			},
@@ -65,9 +80,11 @@ func dataSourceAllocationEntitlementRead(ctx context.Context, d *schema.Resource
 		if x.GetId() == entitlementID {
 			entitlementFound = true
 			d.Set("contract_number", x.GetContractNumber())
-			d.Set("quantity", x.GetEntitlementQuantity())
+			d.Set("end_date", x.GetEndDate())
+			d.Set("entitlement_quantity", x.GetEntitlementQuantity())
 			d.Set("sku", x.GetSku())
-
+			d.Set("start_date", x.GetStartDate())
+			d.Set("subscription_name", x.GetSubscriptionName())
 		}
 	}
 
