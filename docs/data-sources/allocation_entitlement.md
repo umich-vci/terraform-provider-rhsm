@@ -24,7 +24,7 @@ data "rhsm_allocation_entitlement" "entitlement" {
 
 ### Required
 
-- **allocation_uuid** (String) The UUID of the subscription allocation to create the entitlement on.
+- **allocation_uuid** (String) The UUID of the subscription allocation containing the entitlement.
 - **entitlement_id** (String) The ID of the entitlement to look up in the specified allocation.
 
 ### Optional
@@ -33,8 +33,11 @@ data "rhsm_allocation_entitlement" "entitlement" {
 
 ### Read-Only
 
-- **contract_number** (String) The support contract associated with the entitlement.
-- **quantity** (Number) The number of entitlements available in the pool.
-- **sku** (String) The SKU of the entitlement.
+- **contract_number** (String) The subscription contract number.
+- **end_date** (String) The date the subscription ends.
+- **entitlement_quantity** (Number) The quantity of the subscription available in the entitlement.
+- **sku** (String) The SKU of the subscription.
+- **start_date** (String) The date the subscription starts.
+- **subscription_name** (String) The name of the subscription.
 
 

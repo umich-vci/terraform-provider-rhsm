@@ -43,9 +43,21 @@ Read-Only:
 Read-Only:
 
 - **date_added** (String)
-- **gold_image_status** (String)
+- **gold_image_status** (List of Object) (see [below for nested schema](#nestedobjatt--enabled_accounts--accounts--gold_image_status))
 - **id** (String)
 - **nickname** (String)
+- **source_id** (String)
+- **verified** (Boolean)
+
+<a id="nestedobjatt--enabled_accounts--accounts--gold_image_status"></a>
+### Nested Schema for `enabled_accounts.accounts.gold_image_status`
+
+Read-Only:
+
+- **description** (String)
+- **name** (String)
+- **status** (String)
+
 
 
 <a id="nestedobjatt--enabled_accounts--products"></a>
