@@ -28,7 +28,7 @@ func dataSourceAllocationPools() *schema.Resource {
 			},
 			"pools": {
 				Description: "A list of pools available to the subscription allocation.",
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{

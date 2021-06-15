@@ -33,7 +33,7 @@ func dataSourceAllocation() *schema.Resource {
 			},
 			"entitlements_attached": {
 				Description: "A list of entitlements attached to the subscription allocation.",
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
