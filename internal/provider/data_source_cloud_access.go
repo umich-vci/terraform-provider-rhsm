@@ -17,13 +17,13 @@ func dataSourceCloudAccess() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"enabled_accounts": {
 				Description: "A list where each entry is a single cloud provider",
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"accounts": {
 							Description: "A list of cloud accounts that are enabled for cloud access in the cloud provider.",
-							Type:        schema.TypeSet,
+							Type:        schema.TypeList,
 							Computed:    true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -34,7 +34,7 @@ func dataSourceCloudAccess() *schema.Resource {
 									},
 									"gold_image_status": {
 										Description: "The status of any requests for gold image access for a cloud account.",
-										Type:        schema.TypeSet,
+										Type:        schema.TypeList,
 										Computed:    true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -86,7 +86,7 @@ func dataSourceCloudAccess() *schema.Resource {
 						},
 						"products": {
 							Description: "A list of products that are entitled to the cloud provider.",
-							Type:        schema.TypeSet,
+							Type:        schema.TypeList,
 							Computed:    true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
