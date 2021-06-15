@@ -68,7 +68,7 @@ func resourceAllocation() *schema.Resource {
 			},
 			"entitlements_attached": {
 				Description: "",
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Computed:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
