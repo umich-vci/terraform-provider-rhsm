@@ -2,6 +2,8 @@ package provider
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -18,6 +20,10 @@ func resourceCloudAccessAccount() *schema.Resource {
 		UpdateContext: resourceCloudAccessAccountUpdate,
 		DeleteContext: resourceCloudAccessAccountDelete,
 
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"account_id": {
 				Description:  "The ID of a cloud account that you would like to request Red Hat Cloud Access for.",
@@ -31,7 +37,7 @@ func resourceCloudAccessAccount() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice([]string{"AWS", "GCE", "MSAZ"}, false),
+				ValidateFunc: validation.StringInSlice(cloudAccessAccountProviders, false),
 			},
 			"gold_images": {
 				Description: "A list of gold images to request access to for the account. Images available to a cloud provider can be found with the `rhsm_cloud_access` data source.",
@@ -94,8 +100,11 @@ func resourceCloudAccessAccountRead(ctx context.Context, d *schema.ResourceData,
 	client := meta.(*apiClient).Client
 	auth := meta.(*apiClient).Auth
 
-	id := d.Get("account_id").(string)
-	shortName := d.Get("provider_short_name").(string)
+	shortName, accountID, err := resourceCloudAccessAccountSplitID(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	foundAccount := false
 
 	cap, _, err := client.CloudaccessApi.ListEnabledCloudAccessProviders(auth).Execute()
@@ -106,8 +115,10 @@ func resourceCloudAccessAccountRead(ctx context.Context, d *schema.ResourceData,
 	for _, x := range cap.GetBody() {
 		if x.GetShortName() == shortName {
 			for _, y := range x.GetAccounts() {
-				if y.Id == id {
+				if y.Id == accountID {
 					foundAccount = true
+					d.Set("provider_short_name", shortName)
+					d.Set("account_id", accountID)
 					d.Set("nickname", y.GetNickname())
 					d.Set("date_added", y.GetDateAdded())
 					d.Set("source_id", y.GetSourceId())
@@ -139,12 +150,12 @@ func resourceCloudAccessAccountCreate(ctx context.Context, d *schema.ResourceDat
 	client := meta.(*apiClient).Client
 	auth := meta.(*apiClient).Auth
 
-	id := d.Get("account_id").(string)
+	accountID := d.Get("account_id").(string)
 	shortName := d.Get("provider_short_name").(string)
 	nickname := d.Get("nickname").(string)
 
 	account := &gorhsm.AddProviderAccount{
-		Id:       &id,
+		Id:       &accountID,
 		Nickname: &nickname,
 	}
 	accountList := []gorhsm.AddProviderAccount{*account}
@@ -154,7 +165,7 @@ func resourceCloudAccessAccountCreate(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	d.SetId(id)
+	d.SetId(fmt.Sprintf("%s:%s", shortName, accountID))
 
 	if g, ok := d.GetOk("gold_images"); ok {
 		rawGoldImages := g.(*schema.Set).List()
@@ -163,7 +174,7 @@ func resourceCloudAccessAccountCreate(ctx context.Context, d *schema.ResourceDat
 			goldimages = append(goldimages, rawGoldImages[x].(string))
 		}
 		gi := &gorhsm.InlineObject5{
-			Accounts: []string{id},
+			Accounts: []string{accountID},
 			Images:   goldimages,
 		}
 
@@ -181,9 +192,10 @@ func resourceCloudAccessAccountUpdate(ctx context.Context, d *schema.ResourceDat
 	client := meta.(*apiClient).Client
 	auth := meta.(*apiClient).Auth
 
-	id := d.Id()
-	shortName := d.Get("provider_short_name").(string)
-	accountID := d.Get("account_id").(string)
+	shortName, accountID, err := resourceCloudAccessAccountSplitID(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
 
 	if d.HasChange("nickname") {
 		account := &gorhsm.InlineObject3{Nickname: d.Get("nickname").(string)}
@@ -201,7 +213,7 @@ func resourceCloudAccessAccountUpdate(ctx context.Context, d *schema.ResourceDat
 				goldimages = append(goldimages, rawGoldImages[x].(string))
 			}
 			gi := &gorhsm.InlineObject5{
-				Accounts: []string{id},
+				Accounts: []string{accountID},
 				Images:   goldimages,
 			}
 
@@ -220,14 +232,16 @@ func resourceCloudAccessAccountDelete(ctx context.Context, d *schema.ResourceDat
 	client := meta.(*apiClient).Client
 	auth := meta.(*apiClient).Auth
 
-	id := d.Id()
-	shortName := d.Get("provider_short_name").(string)
-
-	remove := &gorhsm.InlineObject2{
-		Id: id,
+	shortName, accountID, err := resourceCloudAccessAccountSplitID(d.Id())
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
-	_, err := client.CloudaccessApi.RemoveProviderAccount(auth, shortName).Account(*remove).Execute()
+	remove := &gorhsm.InlineObject2{
+		Id: accountID,
+	}
+
+	_, err = client.CloudaccessApi.RemoveProviderAccount(auth, shortName).Account(*remove).Execute()
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -235,4 +249,34 @@ func resourceCloudAccessAccountDelete(ctx context.Context, d *schema.ResourceDat
 	d.SetId("")
 
 	return nil
+}
+
+func resourceCloudAccessAccountSplitID(id string) (shortName string, accountID string, err error) {
+	splitID := strings.SplitN(id, ":", 2)
+
+	if len(splitID) != 2 {
+		return "", "", fmt.Errorf("Cloud Access Account ID %s could not be split correctly", id)
+	}
+
+	name := splitID[0]
+	acctID := splitID[1]
+
+	validProvider := false
+	for _, x := range cloudAccessAccountProviders {
+		if name == x {
+			validProvider = true
+		}
+	}
+
+	if !validProvider {
+		return "", "", fmt.Errorf("Invalid Cloud Access Account provider %s specified in ID %s", name, id)
+	}
+
+	return name, acctID, nil
+}
+
+var cloudAccessAccountProviders = []string{
+	"AWS",
+	"GCE",
+	"MSAZ",
 }
