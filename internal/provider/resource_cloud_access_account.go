@@ -40,7 +40,7 @@ func resourceCloudAccessAccount() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(cloudAccessAccountProviders, false),
 			},
 			"gold_images": {
-				Description: "A list of gold images to request access to for the account. Images available to a cloud provider can be found with the `rhsm_cloud_access` data source.",
+				Description: "A list of gold images to request access to for the account. Images available to a cloud provider can be found with the `rhsm_cloud_access` data source. Once you request access to a gold image, it is not possible to disable access via the API.",
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Elem: &schema.Schema{
@@ -125,14 +125,17 @@ func resourceCloudAccessAccountRead(ctx context.Context, d *schema.ResourceData,
 					d.Set("verified", y.GetVerified())
 
 					goldImageStatus := make([]map[string]interface{}, 0)
+					goldImages := []string{}
 					for _, z := range y.GetGoldImageStatus() {
 						goldImage := make(map[string]interface{})
 						goldImage["description"] = z.GetDescription()
 						goldImage["name"] = z.GetName()
 						goldImage["status"] = z.GetStatus()
 						goldImageStatus = append(goldImageStatus, goldImage)
+						goldImages = append(goldImages, z.GetName())
 					}
 					d.Set("gold_image_status", goldImageStatus)
+					d.Set("gold_images", goldImages)
 					break
 				}
 			}
@@ -219,7 +222,6 @@ func resourceCloudAccessAccountUpdate(ctx context.Context, d *schema.ResourceDat
 
 			_, err := client.CloudaccessApi.EnableGoldImages(auth, shortName).GoldImages(*gi).Execute()
 			if err != nil {
-				d.Set("gold_images", []string{})
 				return diag.FromErr(err)
 			}
 		}
