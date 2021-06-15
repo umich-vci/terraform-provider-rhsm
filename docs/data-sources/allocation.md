@@ -37,6 +37,7 @@ resource "rhsm_allocation" "foo" {
 - **entitlements_attached_quantity** (Number) The number of entitlements associated with the subscription
 - **last_modified** (String) The date and time the subscription allocation was last modified.
 - **name** (String) The name of the subscription allocation.
+- **simple_content_access** (String) Simple content access status.
 - **type** (String) The type of the subscription allocation.  The only one supported by this resource is `Satellite`.
 - **version** (String) The version of the subscription allocation type.
 
@@ -47,5 +48,19 @@ Read-Only:
 
 - **reason** (String)
 - **valid** (Boolean)
+- **values** (Set of Object) (see [below for nested schema](#nestedobjatt--entitlements_attached--values))
+
+<a id="nestedobjatt--entitlements_attached--values"></a>
+### Nested Schema for `entitlements_attached.values`
+
+Read-Only:
+
+- **contract_number** (String)
+- **end_date** (String)
+- **entitlement_quantity** (Number)
+- **id** (String)
+- **sku** (String)
+- **start_date** (String)
+- **subscription_name** (String)
 
 
