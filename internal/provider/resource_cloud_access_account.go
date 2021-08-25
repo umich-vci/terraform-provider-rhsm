@@ -257,7 +257,7 @@ func resourceCloudAccessAccountSplitID(id string) (shortName string, accountID s
 	splitID := strings.SplitN(id, ":", 2)
 
 	if len(splitID) != 2 {
-		return "", "", fmt.Errorf("Cloud Access Account ID %s could not be split correctly", id)
+		return "", "", fmt.Errorf("the Cloud Access Account ID %s could not be split correctly", id)
 	}
 
 	name := splitID[0]
@@ -271,7 +271,7 @@ func resourceCloudAccessAccountSplitID(id string) (shortName string, accountID s
 	}
 
 	if !validProvider {
-		return "", "", fmt.Errorf("Invalid Cloud Access Account provider %s specified in ID %s", name, id)
+		return "", "", fmt.Errorf("invalid Cloud Access Account provider %s specified in ID %s", name, id)
 	}
 
 	return name, acctID, nil

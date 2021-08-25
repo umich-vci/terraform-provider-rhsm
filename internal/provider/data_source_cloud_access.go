@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -192,7 +191,7 @@ func dataSourceCloudAccessRead(ctx context.Context, d *schema.ResourceData, meta
 		cloudProviders = append(cloudProviders, cloudProvider)
 	}
 
-	d.SetId(time.Now().UTC().String())
+	d.SetId("-")
 
 	d.Set("enabled_accounts", cloudProviders)
 

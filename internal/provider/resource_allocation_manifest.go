@@ -111,6 +111,10 @@ func resourceAllocationManifestCreate(ctx context.Context, d *schema.ResourceDat
 
 	mclient := new(http.Client)
 	req, err := http.NewRequest(http.MethodGet, manifestURL, nil)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
 	req.Header.Add("Authorization", "Bearer "+auth.Value(gorhsm.ContextAPIKeys).(gorhsm.APIKey).Key)
 	resp, err := mclient.Do(req)
 	if err != nil {
