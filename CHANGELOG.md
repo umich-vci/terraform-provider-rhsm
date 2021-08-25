@@ -1,3 +1,11 @@
+## 0.4.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* Updated [terraform-plugin-sdk](https://github.com/hashicorp/terraform-plugin-sdk) to 2.7.0.
+* Updated [gorhsm](https://github.com/umich-vci/gosatellite) to 1.196.0.
+* Use StateContext instead of State as State is deprecated.
+
 ## 0.3.0 (June 15, 2021)
 
 BREAKING CHANGES:
@@ -14,7 +22,7 @@ BUG FIXES:
 
 ENHANCEMENTS:
 
-* Updated [terraform-plugin-sdk](https://github.com/umich-vci/gosatellite) to 2.6.1.
+* Updated [terraform-plugin-sdk](https://github.com/hashicorp/terraform-plugin-sdk) to 2.6.1.
 * Reworked code to model the approach in
   [terraform-provider-scaffoling](https://github.com/hashicorp/terraform-provider-scaffolding).
 * Added descriptions to resources and data sources to allow for usage in documentation
