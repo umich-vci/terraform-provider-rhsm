@@ -329,8 +329,8 @@ github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/
 github.com/ulikunitz/xz v0.5.5/go.mod h1:2bypXElzHzzJZwzH67Y6wb67pO62Rzfn7BSiF4ABRW8=
 github.com/ulikunitz/xz v0.5.8 h1:ERv8V6GKqVi23rgu5cj9pVfVzJbOqAY2Ntl88O6c2nQ=
 github.com/ulikunitz/xz v0.5.8/go.mod h1:nbz6k7qbPmH4IRqmfOplQw/tblSgqTqBwxkY0oWt/14=
-github.com/umich-vci/gorhsm v1.182.0 h1:qqlIpp33Doc8ETkd0ZEAM74RIpWlWPmBEyT+0NVm9Z0=
-github.com/umich-vci/gorhsm v1.182.0/go.mod h1:DXRb8eM45CkDvaEtr+O5IT50Cb8NTleUeiZxb7g3AtQ=
+github.com/umich-vci/gorhsm v1.196.0 h1:4IddTEJJE3AIurmFwFkRQ3nt47d4vdijC84KvLt1/Z4=
+github.com/umich-vci/gorhsm v1.196.0/go.mod h1:RXfmYiXPYLG6sgVGapam50LBdidBRbC90VlbqyIhnfU=
 github.com/vmihailenco/msgpack v3.3.3+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
 github.com/vmihailenco/msgpack v4.0.4+incompatible h1:dSLoQfGFAo3F6OoNhwUmLwVgaUXK79GlxNBwueZn0xI=
 github.com/vmihailenco/msgpack v4.0.4+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
