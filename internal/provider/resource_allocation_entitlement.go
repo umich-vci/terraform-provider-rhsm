@@ -18,7 +18,7 @@ func resourceAllocationEntitlement() *schema.Resource {
 		DeleteContext: resourceAllocationEntitlementDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
