@@ -1,10 +1,12 @@
-## 0.4.0 (Unreleased)
+## 0.4.0 (February 25, 2022)
 
 ENHANCEMENTS:
 
-* Updated [terraform-plugin-sdk](https://github.com/hashicorp/terraform-plugin-sdk) to 2.7.0.
+* Updated [terraform-plugin-sdk](https://github.com/hashicorp/terraform-plugin-sdk) to 2.10.1.
+* Updated [terraform-plugin-docs](https://github.com/hashicorp/terraform-plugin-docs) to 0.5.0.
 * Updated [gorhsm](https://github.com/umich-vci/gosatellite) to 1.196.0.
 * Use StateContext instead of State as State is deprecated.
+* Build for Darwin arm64
 
 ## 0.3.0 (June 15, 2021)
 
