@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-var nameRegex, _ = regexp.Compile("^[a-zA-Z0-9\\_\\-\\.]{1,100}$")
+var nameRegex, _ = regexp.Compile(`^[a-zA-Z0-9\_\-\.]{1,100}$`)
 
 func resourceAllocation() *schema.Resource {
 	return &schema.Resource{
