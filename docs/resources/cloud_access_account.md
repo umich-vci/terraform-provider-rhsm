@@ -26,7 +26,7 @@ resource "rhsm_cloud_access_account" "test_account" {
 
 ### Required
 
-- `account_id` (String) The ID of a cloud account that you would like to request Red Hat Cloud Access for.
+- `account_id` (String) The ID of a cloud account that you would like to request Red Hat Cloud Access for. For GCE this should be a Google Group.
 - `provider_short_name` (String) The short name of the cloud provider that the `account_id` is in. This must be one of "AWS", "GCE", or "MSAZ".  Other cloud providers are supported but have not been tested so they are not in the list of valid options.
 
 ### Optional
