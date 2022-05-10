@@ -26,7 +26,7 @@ func resourceCloudAccessAccount() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"account_id": {
-				Description:  "The ID of a cloud account that you would like to request Red Hat Cloud Access for.",
+				Description:  "The ID of a cloud account that you would like to request Red Hat Cloud Access for. For GCE this should be a Google Group.",
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
