@@ -25,17 +25,14 @@ resource "rhsm_allocation_entitlement" "entitlement" {
 
 ### Required
 
-- **allocation_uuid** (String) The UUID of the subscription allocation to create the entitlement on.
-- **pool** (String) The ID of the pool you would like to create the entitlement from.
-- **quantity** (Number) The number of entitlements you would like add to the allocation/use from the pool.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `allocation_uuid` (String) The UUID of the subscription allocation to create the entitlement on.
+- `pool` (String) The ID of the pool you would like to create the entitlement from.
+- `quantity` (Number) The number of entitlements you would like add to the allocation/use from the pool.
 
 ### Read-Only
 
-- **contract_number** (String) The support contract associated with the entitlement.
-- **sku** (String) The SKU of the entitlement.
+- `contract_number` (String) The support contract associated with the entitlement.
+- `id` (String) The ID of this resource.
+- `sku` (String) The SKU of the entitlement.
 
 

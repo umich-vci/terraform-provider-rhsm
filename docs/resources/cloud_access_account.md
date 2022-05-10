@@ -26,29 +26,29 @@ resource "rhsm_cloud_access_account" "test_account" {
 
 ### Required
 
-- **account_id** (String) The ID of a cloud account that you would like to request Red Hat Cloud Access for.
-- **provider_short_name** (String) The short name of the cloud provider that the `account_id` is in. This must be one of "AWS", "GCE", or "MSAZ".  Other cloud providers are supported but have not been tested so they are not in the list of valid options.
+- `account_id` (String) The ID of a cloud account that you would like to request Red Hat Cloud Access for.
+- `provider_short_name` (String) The short name of the cloud provider that the `account_id` is in. This must be one of "AWS", "GCE", or "MSAZ".  Other cloud providers are supported but have not been tested so they are not in the list of valid options.
 
 ### Optional
 
-- **gold_images** (Set of String) A list of gold images to request access to for the account. Images available to a cloud provider can be found with the `rhsm_cloud_access` data source. Once you request access to a gold image, it is not possible to disable access via the API.
-- **id** (String) The ID of this resource.
-- **nickname** (String) A nickname to help describe the account. Defaults to ``.
+- `gold_images` (Set of String) A list of gold images to request access to for the account. Images available to a cloud provider can be found with the `rhsm_cloud_access` data source. Once you request access to a gold image, it is not possible to disable access via the API.
+- `nickname` (String) A nickname to help describe the account. Defaults to ``.
 
 ### Read-Only
 
-- **date_added** (String) The date the cloud account was added to Red Hat Cloud Access.
-- **gold_image_status** (Set of Object) The status of any requests for gold image access for the cloud account. (see [below for nested schema](#nestedatt--gold_image_status))
-- **source_id** (String) Source ID of linked account. Only for accounts created via Sources on cloud.redhat.com.
-- **verified** (Boolean) Is the cloud provider account verified for RHSM Auto Registration?
+- `date_added` (String) The date the cloud account was added to Red Hat Cloud Access.
+- `gold_image_status` (Set of Object) The status of any requests for gold image access for the cloud account. (see [below for nested schema](#nestedatt--gold_image_status))
+- `id` (String) The ID of this resource.
+- `source_id` (String) Source ID of linked account. Only for accounts created via Sources on cloud.redhat.com.
+- `verified` (Boolean) Is the cloud provider account verified for RHSM Auto Registration?
 
 <a id="nestedatt--gold_image_status"></a>
 ### Nested Schema for `gold_image_status`
 
 Read-Only:
 
-- **description** (String)
-- **name** (String)
-- **status** (String)
+- `description` (String)
+- `name` (String)
+- `status` (String)
 
 

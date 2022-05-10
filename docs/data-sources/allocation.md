@@ -23,44 +23,41 @@ resource "rhsm_allocation" "foo" {
 
 ### Required
 
-- **uuid** (String) The UUID of the subscription allocation to look up.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `uuid` (String) The UUID of the subscription allocation to look up.
 
 ### Read-Only
 
-- **created_by** (String) The user account used to create the subscription allocation.
-- **created_date** (String) The date and time the subscription allocation was created.
-- **entitlements_attached** (List of Object) A list of entitlements attached to the subscription allocation. (see [below for nested schema](#nestedatt--entitlements_attached))
-- **entitlements_attached_quantity** (Number) The number of entitlements associated with the subscription
-- **last_modified** (String) The date and time the subscription allocation was last modified.
-- **name** (String) The name of the subscription allocation.
-- **simple_content_access** (String) Simple content access status.
-- **type** (String) The type of the subscription allocation.  The only one supported by this resource is `Satellite`.
-- **version** (String) The version of the subscription allocation type.
+- `created_by` (String) The user account used to create the subscription allocation.
+- `created_date` (String) The date and time the subscription allocation was created.
+- `entitlements_attached` (List of Object) A list of entitlements attached to the subscription allocation. (see [below for nested schema](#nestedatt--entitlements_attached))
+- `entitlements_attached_quantity` (Number) The number of entitlements associated with the subscription
+- `id` (String) The ID of this resource.
+- `last_modified` (String) The date and time the subscription allocation was last modified.
+- `name` (String) The name of the subscription allocation.
+- `simple_content_access` (String) Simple content access status.
+- `type` (String) The type of the subscription allocation.  The only one supported by this resource is `Satellite`.
+- `version` (String) The version of the subscription allocation type.
 
 <a id="nestedatt--entitlements_attached"></a>
 ### Nested Schema for `entitlements_attached`
 
 Read-Only:
 
-- **reason** (String)
-- **valid** (Boolean)
-- **values** (Set of Object) (see [below for nested schema](#nestedobjatt--entitlements_attached--values))
+- `reason` (String)
+- `valid` (Boolean)
+- `values` (Set of Object) (see [below for nested schema](#nestedobjatt--entitlements_attached--values))
 
 <a id="nestedobjatt--entitlements_attached--values"></a>
 ### Nested Schema for `entitlements_attached.values`
 
 Read-Only:
 
-- **contract_number** (String)
-- **end_date** (String)
-- **entitlement_quantity** (Number)
-- **id** (String)
-- **sku** (String)
-- **start_date** (String)
-- **subscription_name** (String)
+- `contract_number` (String)
+- `end_date` (String)
+- `entitlement_quantity` (Number)
+- `id` (String)
+- `sku` (String)
+- `start_date` (String)
+- `subscription_name` (String)
 
 

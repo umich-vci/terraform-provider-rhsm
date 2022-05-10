@@ -23,16 +23,13 @@ resource "rhsm_allocation_manifest" "manifest" {
 
 ### Required
 
-- **allocation_uuid** (String) The UUID of the subscription allocation to create the manifest from.
-
-### Optional
-
-- **id** (String) The ID of this resource.
+- `allocation_uuid` (String) The UUID of the subscription allocation to create the manifest from.
 
 ### Read-Only
 
-- **last_modified** (String) The date and time the subscription allocation was last modified.
-- **manifest** (String, Sensitive) The manifest as downloaded from the RHSM portal.  This is a zip file which has been base64 encoded to a string.
-- **manifest_last_modified** (String) The date and time the subscription allocation was last modified when the manifest was last generated.
+- `id` (String) The ID of this resource.
+- `last_modified` (String) The date and time the subscription allocation was last modified.
+- `manifest` (String, Sensitive) The manifest as downloaded from the RHSM portal.  This is a zip file which has been base64 encoded to a string.
+- `manifest_last_modified` (String) The date and time the subscription allocation was last modified when the manifest was last generated.
 
 

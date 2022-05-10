@@ -24,30 +24,30 @@ data "rhsm_allocation_pools" "pools" {
 
 ### Required
 
-- **allocation_uuid** (String) The UUID of the subscription allocation.
+- `allocation_uuid` (String) The UUID of the subscription allocation.
 
 ### Optional
 
-- **future** (Boolean) Should pools only valid in the future be listed?
-- **id** (String) The ID of this resource.
+- `future` (Boolean) Should pools only valid in the future be listed?
 
 ### Read-Only
 
-- **pools** (List of Object) A list of pools available to the subscription allocation. (see [below for nested schema](#nestedatt--pools))
+- `id` (String) The ID of this resource.
+- `pools` (List of Object) A list of pools available to the subscription allocation. (see [below for nested schema](#nestedatt--pools))
 
 <a id="nestedatt--pools"></a>
 ### Nested Schema for `pools`
 
 Read-Only:
 
-- **contract_number** (String)
-- **end_date** (String)
-- **entitlements_available** (Number)
-- **id** (String)
-- **service_level** (String)
-- **sku** (String)
-- **start_date** (String)
-- **subscription_name** (String)
-- **subscription_number** (String)
+- `contract_number` (String)
+- `end_date` (String)
+- `entitlements_available` (Number)
+- `id` (String)
+- `service_level` (String)
+- `sku` (String)
+- `start_date` (String)
+- `subscription_name` (String)
+- `subscription_number` (String)
 
 
