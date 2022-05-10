@@ -18,7 +18,7 @@ func TestAccResourceAllocation(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"rhsm_allocation.test", "name", "TerraformAcceptanceTestAllocation"),
 					resource.TestMatchResourceAttr(
-						"rhsm_allocation.test", "uuid", regexp.MustCompile("[\\da-f]{8}-[\\da-f]{4}-[\\da-f]{4}-[\\da-f]{4}-[\\da-f]{12}")),
+						"rhsm_allocation.test", "uuid", regexp.MustCompile(`[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}`)),
 				),
 			},
 		},
