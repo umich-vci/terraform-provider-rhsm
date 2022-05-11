@@ -1,3 +1,12 @@
+## 0.5.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* Updated [terraform-plugin-sdk](https://github.com/hashicorp/terraform-plugin-sdk) to 2.16.0.
+* Updated [terraform-plugin-docs](https://github.com/hashicorp/terraform-plugin-docs) to 0.8.1.
+* Updated [gorhsm](https://github.com/umich-vci/gosatellite) to 1.264.0.
+* `resource/rhsm_cloud_access_account` Updated examples and documentation.
+
 ## 0.4.0 (February 25, 2022)
 
 ENHANCEMENTS:
