@@ -12,11 +12,13 @@ that can be used with Red Hat Satellite.
 It can also be used to manage Red Hat Cloud Access for various cloud provider accounts.  Requesting access to
 gold images is supported as well for AWS, Azure, and GCP.
 
-The provider does not have working tests so it should probably be considered beta.
+The provider only has working tests for the `rhsm_cloud_access_account` resource, so all other resources should probably
+be considered beta.
 
 ## Using the provider
 
-The provider is available on the [Terraform Registry](https://registry.terraform.io/providers/umich-vci/rhsm/latest) so you probably don't need to build the provider unless you want to contribute.
+The provider is available on the [Terraform Registry](https://registry.terraform.io/providers/umich-vci/rhsm/latest) so you
+probably don't need to build the provider unless you want to contribute.
 
 ## Requirements
 
