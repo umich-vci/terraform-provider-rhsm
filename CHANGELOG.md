@@ -1,3 +1,10 @@
+## 0.6.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* Updated [terraform-plugin-sdk](https://github.com/hashicorp/terraform-plugin-sdk) to 2.17.0.
+* Updated [terraform-plugin-docs](https://github.com/hashicorp/terraform-plugin-docs) to 0.10.1.
+
 ## 0.5.0 (May 11, 2022)
 
 ENHANCEMENTS:
