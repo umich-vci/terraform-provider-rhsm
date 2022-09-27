@@ -176,7 +176,7 @@ func resourceCloudAccessAccountCreate(ctx context.Context, d *schema.ResourceDat
 		for x := range rawGoldImages {
 			goldimages = append(goldimages, rawGoldImages[x].(string))
 		}
-		gi := &gorhsm.InlineObject5{
+		gi := &gorhsm.EnableGoldImagesRequest{
 			Accounts: []string{accountID},
 			Images:   goldimages,
 		}
@@ -201,7 +201,7 @@ func resourceCloudAccessAccountUpdate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if d.HasChange("nickname") {
-		account := &gorhsm.InlineObject3{Nickname: d.Get("nickname").(string)}
+		account := &gorhsm.UpdateProviderAccountRequest{Nickname: d.Get("nickname").(string)}
 		_, err := client.CloudaccessApi.UpdateProviderAccount(auth, shortName, accountID).Account(*account).Execute()
 		if err != nil {
 			return diag.FromErr(err)
@@ -215,7 +215,7 @@ func resourceCloudAccessAccountUpdate(ctx context.Context, d *schema.ResourceDat
 			for x := range rawGoldImages {
 				goldimages = append(goldimages, rawGoldImages[x].(string))
 			}
-			gi := &gorhsm.InlineObject5{
+			gi := &gorhsm.EnableGoldImagesRequest{
 				Accounts: []string{accountID},
 				Images:   goldimages,
 			}
@@ -239,7 +239,7 @@ func resourceCloudAccessAccountDelete(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	remove := &gorhsm.InlineObject2{
+	remove := &gorhsm.RemoveProviderAccountRequest{
 		Id: accountID,
 	}
 
