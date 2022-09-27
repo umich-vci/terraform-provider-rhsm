@@ -68,6 +68,7 @@ jobs:
   #       terraform:
   #         - '1.0.*'
   #         - '1.1.*'
+  #         - '1.2.*'
   #   steps:
 
   #   - name: Check out code into the Go module directory
