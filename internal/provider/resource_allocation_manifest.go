@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/umich-vci/gorhsm"
 )
 
 func resourceAllocationManifest() *schema.Resource {
@@ -110,12 +109,11 @@ func resourceAllocationManifestCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	mclient := new(http.Client)
-	req, err := http.NewRequest(http.MethodGet, manifestURL, nil)
+	req, err := http.NewRequestWithContext(auth, http.MethodGet, manifestURL, nil)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	req.Header.Add("Authorization", "Bearer "+auth.Value(gorhsm.ContextAPIKeys).(gorhsm.APIKey).Key)
 	resp, err := mclient.Do(req)
 	if err != nil {
 		return diag.FromErr(err)

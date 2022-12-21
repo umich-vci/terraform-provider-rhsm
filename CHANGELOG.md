@@ -1,3 +1,13 @@
+## 0.6.1 (December 21, 2022)
+
+BUG FIXES:
+
+* Fix crash in `resource/rhsm_allocation_manifest` when downloading the manifest
+
+ENHANCEMENTS:
+
+* Updated [terraform-plugin-sdk](https://github.com/hashicorp/terraform-plugin-sdk) to 2.24.1.
+
 ## 0.6.0 (September 27, 2022)
 
 ENHANCEMENTS:
