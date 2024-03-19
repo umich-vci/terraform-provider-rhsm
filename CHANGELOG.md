@@ -1,3 +1,12 @@
+## 0.7.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* Using go 1.22
+* Updated [terraform-plugin-sdk](https://github.com/hashicorp/terraform-plugin-sdk) to 2.33.0.
+* Updated [terraform-plugin-docs](https://github.com/hashicorp/terraform-plugin-docs) to 0.18.0.
+* Updated [gorhsm](https://github.com/umich-vci/gosatellite) to 1.366.0.
+
 ## 0.6.1 (December 21, 2022)
 
 BUG FIXES:
