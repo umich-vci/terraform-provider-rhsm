@@ -107,7 +107,7 @@ func resourceCloudAccessAccountRead(ctx context.Context, d *schema.ResourceData,
 
 	foundAccount := false
 
-	cap, _, err := client.CloudaccessApi.ListEnabledCloudAccessProviders(auth).Execute()
+	cap, _, err := client.CloudaccessAPI.ListEnabledCloudAccessProviders(auth).Execute()
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -163,7 +163,7 @@ func resourceCloudAccessAccountCreate(ctx context.Context, d *schema.ResourceDat
 	}
 	accountList := []gorhsm.AddProviderAccount{*account}
 
-	_, err := client.CloudaccessApi.AddProviderAccounts(auth, shortName).Account(accountList).Execute()
+	_, err := client.CloudaccessAPI.AddProviderAccounts(auth, shortName).Account(accountList).Execute()
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -181,7 +181,7 @@ func resourceCloudAccessAccountCreate(ctx context.Context, d *schema.ResourceDat
 			Images:   goldimages,
 		}
 
-		_, err = client.CloudaccessApi.EnableGoldImages(auth, shortName).GoldImages(*gi).Execute()
+		_, err = client.CloudaccessAPI.EnableGoldImages(auth, shortName).GoldImages(*gi).Execute()
 		if err != nil {
 			d.Set("gold_images", []string{})
 			return diag.FromErr(err)
@@ -202,7 +202,7 @@ func resourceCloudAccessAccountUpdate(ctx context.Context, d *schema.ResourceDat
 
 	if d.HasChange("nickname") {
 		account := &gorhsm.UpdateProviderAccountRequest{Nickname: d.Get("nickname").(string)}
-		_, err := client.CloudaccessApi.UpdateProviderAccount(auth, shortName, accountID).Account(*account).Execute()
+		_, err := client.CloudaccessAPI.UpdateProviderAccount(auth, shortName, accountID).Account(*account).Execute()
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -220,7 +220,7 @@ func resourceCloudAccessAccountUpdate(ctx context.Context, d *schema.ResourceDat
 				Images:   goldimages,
 			}
 
-			_, err := client.CloudaccessApi.EnableGoldImages(auth, shortName).GoldImages(*gi).Execute()
+			_, err := client.CloudaccessAPI.EnableGoldImages(auth, shortName).GoldImages(*gi).Execute()
 			if err != nil {
 				return diag.FromErr(err)
 			}
@@ -243,7 +243,7 @@ func resourceCloudAccessAccountDelete(ctx context.Context, d *schema.ResourceDat
 		Id: accountID,
 	}
 
-	_, err = client.CloudaccessApi.RemoveProviderAccount(auth, shortName).Account(*remove).Execute()
+	_, err = client.CloudaccessAPI.RemoveProviderAccount(auth, shortName).Account(*remove).Execute()
 	if err != nil {
 		return diag.FromErr(err)
 	}

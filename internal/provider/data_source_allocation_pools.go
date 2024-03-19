@@ -95,7 +95,7 @@ func dataSourceAllocationPoolsRead(ctx context.Context, d *schema.ResourceData, 
 		future = b.(bool)
 	}
 
-	pools, _, err := client.AllocationApi.ListAllocationPools(auth, uuid).Future(future).Execute()
+	pools, _, err := client.AllocationAPI.ListAllocationPools(auth, uuid).Future(future).Execute()
 	if err != nil {
 		return diag.FromErr(err)
 	}

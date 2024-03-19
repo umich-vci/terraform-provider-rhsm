@@ -63,7 +63,7 @@ func resourceAllocationEntitlementRead(ctx context.Context, d *schema.ResourceDa
 	entitlementID := d.Id()
 	include := "entitlements"
 
-	alloc, resp, err := client.AllocationApi.ShowAllocation(auth, allocationUUID).Include(include).Execute()
+	alloc, resp, err := client.AllocationAPI.ShowAllocation(auth, allocationUUID).Include(include).Execute()
 	if err != nil {
 		if resp != nil {
 			if resp.StatusCode == 404 {
@@ -99,7 +99,7 @@ func resourceAllocationEntitlementCreate(ctx context.Context, d *schema.Resource
 	pool := d.Get("pool").(string)
 	allocationUUID := d.Get("allocation_uuid").(string)
 
-	pools, _, err := client.AllocationApi.ListAllocationPools(auth, allocationUUID).Execute()
+	pools, _, err := client.AllocationAPI.ListAllocationPools(auth, allocationUUID).Execute()
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -120,7 +120,7 @@ func resourceAllocationEntitlementCreate(ctx context.Context, d *schema.Resource
 
 	quantity := int32(d.Get("quantity").(int))
 
-	alloc, _, err := client.AllocationApi.AttachEntitlementAllocation(auth, allocationUUID).Quantity(quantity).Pool(pool).Execute()
+	alloc, _, err := client.AllocationAPI.AttachEntitlementAllocation(auth, allocationUUID).Quantity(quantity).Pool(pool).Execute()
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -147,7 +147,7 @@ func resourceAllocationEntitlementUpdate(ctx context.Context, d *schema.Resource
 	entitlementID := d.Id()
 	quantity := int32(d.Get("quantity").(int))
 
-	_, _, err := client.AllocationApi.UpdateEntitlementAllocation(auth, allocationUUID, entitlementID).Quantity(quantity).Execute()
+	_, _, err := client.AllocationAPI.UpdateEntitlementAllocation(auth, allocationUUID, entitlementID).Quantity(quantity).Execute()
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -162,7 +162,7 @@ func resourceAllocationEntitlementDelete(ctx context.Context, d *schema.Resource
 	allocationUUID := d.Get("allocation_uuid").(string)
 	entitlementID := d.Id()
 
-	_, err := client.AllocationApi.RemoveAllocationEntitlement(auth, allocationUUID, entitlementID).Execute()
+	_, err := client.AllocationAPI.RemoveAllocationEntitlement(auth, allocationUUID, entitlementID).Execute()
 	if err != nil {
 		return diag.FromErr(err)
 	}

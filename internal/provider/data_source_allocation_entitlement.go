@@ -68,7 +68,7 @@ func dataSourceAllocationEntitlementRead(ctx context.Context, d *schema.Resource
 	entitlementID := d.Get("entitlement_id").(string)
 	include := "entitlements"
 
-	alloc, _, err := client.AllocationApi.ShowAllocation(auth, allocationUUID).Include(include).Execute()
+	alloc, _, err := client.AllocationAPI.ShowAllocation(auth, allocationUUID).Include(include).Execute()
 	if err != nil {
 		return diag.FromErr(err)
 	}

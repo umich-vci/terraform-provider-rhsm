@@ -139,7 +139,7 @@ func dataSourceCloudAccessRead(ctx context.Context, d *schema.ResourceData, meta
 	client := meta.(*apiClient).Client
 	auth := meta.(*apiClient).Auth
 
-	cap, _, err := client.CloudaccessApi.ListEnabledCloudAccessProviders(auth).Execute()
+	cap, _, err := client.CloudaccessAPI.ListEnabledCloudAccessProviders(auth).Execute()
 	if err != nil {
 		return diag.FromErr(err)
 	}

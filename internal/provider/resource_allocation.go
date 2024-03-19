@@ -96,7 +96,7 @@ func resourceAllocationRead(ctx context.Context, d *schema.ResourceData, meta in
 	uuid := d.Id()
 	include := "entitlements"
 
-	alloc, resp, err := client.AllocationApi.ShowAllocation(auth, uuid).Include(include).Execute()
+	alloc, resp, err := client.AllocationAPI.ShowAllocation(auth, uuid).Include(include).Execute()
 	if err != nil {
 		if resp != nil {
 			if resp.StatusCode == 404 {
@@ -132,7 +132,7 @@ func resourceAllocationCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	name := d.Get("name").(string)
 
-	alloc, _, err := client.AllocationApi.CreateSatellite(auth).Name(name).Execute()
+	alloc, _, err := client.AllocationAPI.CreateSatellite(auth).Name(name).Execute()
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -148,7 +148,7 @@ func resourceAllocationDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	uuid := d.Id()
 
-	_, err := client.AllocationApi.RemoveAllocation(auth, uuid).Force(true).Execute()
+	_, err := client.AllocationAPI.RemoveAllocation(auth, uuid).Force(true).Execute()
 	if err != nil {
 		return diag.FromErr(err)
 	}
