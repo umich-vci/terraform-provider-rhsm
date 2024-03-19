@@ -1,4 +1,4 @@
-package provider
+package sdkprovider
 
 import (
 	"regexp"
@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceAllocationEntitlement(t *testing.T) {
+func TestAccDataSourceAllocation(t *testing.T) {
 	t.Skip("data source not yet implemented, remove this once you add your own code")
 
 	resource.UnitTest(t, resource.TestCase{
@@ -15,7 +15,7 @@ func TestAccDataSourceAllocationEntitlement(t *testing.T) {
 		ProviderFactories: providerFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAllocationEntitlement,
+				Config: testAccDataSourceAllocation,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(
 						"data.scaffolding_data_source.foo", "sample_attribute", regexp.MustCompile("^ba")),
@@ -25,7 +25,7 @@ func TestAccDataSourceAllocationEntitlement(t *testing.T) {
 	})
 }
 
-const testAccDataSourceAllocationEntitlement = `
+const testAccDataSourceAllocation = `
 data "scaffolding_data_source" "foo" {
   sample_attribute = "bar"
 }
