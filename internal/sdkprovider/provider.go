@@ -47,7 +47,6 @@ func New(version string) func() *schema.Provider {
 				"rhsm_allocation":             resourceAllocation(),
 				"rhsm_allocation_entitlement": resourceAllocationEntitlement(),
 				"rhsm_allocation_manifest":    resourceAllocationManifest(),
-				"rhsm_cloud_access_account":   resourceCloudAccessAccount(),
 			},
 		}
 
