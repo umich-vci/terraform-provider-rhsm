@@ -11,8 +11,8 @@ func TestAccDataSourceAllocationEntitlement(t *testing.T) {
 	t.Skip("data source not yet implemented, remove this once you add your own code")
 
 	resource.UnitTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: providerFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceAllocationEntitlement,

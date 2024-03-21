@@ -1,18 +1,31 @@
 package sdkprovider
 
 import (
+	"context"
 	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
+	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
+	"github.com/umich-vci/terraform-provider-rhsm/internal/provider"
 )
 
-// providerFactories are used to instantiate a provider during acceptance testing.
-// The factory function will be invoked for every Terraform CLI command executed
-// to create a provider server to which the CLI can reattach.
-var providerFactories = map[string]func() (*schema.Provider, error){
-	"rhsm": func() (*schema.Provider, error) {
-		return New("test")(), nil
+var testAccProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
+	"rhsm": func() (tfprotov5.ProviderServer, error) {
+		ctx := context.Background()
+		providers := []func() tfprotov5.ProviderServer{
+			New("test")().GRPCProvider,
+			providerserver.NewProtocol5(provider.New("test")),
+		}
+
+		muxServer, err := tf5muxserver.NewMuxServer(ctx, providers...)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return muxServer.ProviderServer(), nil
 	},
 }
 

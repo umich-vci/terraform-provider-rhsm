@@ -8,8 +8,8 @@ import (
 
 func TestAccResourceCloudAccessAccountAzure(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: providerFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceCloudAccessAccountAzure,
@@ -28,8 +28,8 @@ func TestAccResourceCloudAccessAccountAzure(t *testing.T) {
 
 func TestAccResourceCloudAccessAccountAWS(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: providerFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceCloudAccessAccountAWS,
@@ -48,8 +48,8 @@ func TestAccResourceCloudAccessAccountAWS(t *testing.T) {
 
 func TestAccResourceCloudAccessAccountGCP(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: providerFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceCloudAccessAccountGCP,
