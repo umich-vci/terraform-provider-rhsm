@@ -41,7 +41,7 @@ func main() {
 	flag.Parse()
 
 	providers := []func() tfprotov5.ProviderServer{
-		providerserver.NewProtocol5(provider.New()),
+		providerserver.NewProtocol5(provider.New(version)),
 		sdkprovider.New(version)().GRPCProvider,
 	}
 

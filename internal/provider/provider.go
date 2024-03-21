@@ -13,7 +13,7 @@ import (
 	"github.com/umich-vci/gorhsm"
 )
 
-// Ensure ScaffoldingProvider satisfies various provider interfaces.
+// Ensure RHSMProvider satisfies various provider interfaces.
 var _ provider.Provider = &RHSMProvider{}
 
 type RHSMProvider struct {
@@ -42,8 +42,8 @@ func (p *RHSMProvider) Schema(ctx context.Context, req provider.SchemaRequest, r
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"refresh_token": schema.StringAttribute{
-				Description: "This is the [offline token](https://access.redhat.com/articles/3626371#bgenerating-a-new-offline-tokenb-3) used to generate access tokens for Red Hat Subscription Manager. This must be provided in the config or in the environment variable `RHSM_REFRESH_TOKEN`.",
-				Required:    true,
+				MarkdownDescription: "This is the [offline token](https://access.redhat.com/articles/3626371#bgenerating-a-new-offline-tokenb-3) used to generate access tokens for Red Hat Subscription Manager. This must be provided in the config or in the environment variable `RHSM_REFRESH_TOKEN`.",
+				Optional:            true,
 			},
 		},
 	}
@@ -118,13 +118,17 @@ func (p *RHSMProvider) Configure(ctx context.Context, req provider.ConfigureRequ
 }
 
 func (p *RHSMProvider) Resources(ctx context.Context) []func() resource.Resource {
-	return []func() resource.Resource{}
+	return []func() resource.Resource{
+		// NewCloudAccessAccountResource,
+	}
 }
 
 func (p *RHSMProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{}
 }
 
-func New() provider.Provider {
-	return &RHSMProvider{}
+func New(version string) provider.Provider {
+	return &RHSMProvider{
+		version: version,
+	}
 }
