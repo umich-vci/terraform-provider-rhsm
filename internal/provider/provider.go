@@ -119,7 +119,7 @@ func (p *RHSMProvider) Configure(ctx context.Context, req provider.ConfigureRequ
 
 func (p *RHSMProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		// NewCloudAccessAccountResource,
+		NewCloudAccessAccountResource,
 	}
 }
 
