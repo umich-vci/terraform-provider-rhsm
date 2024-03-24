@@ -1,15 +1,15 @@
-package sdkprovider
+package provider
 
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccResourceCloudAccessAccountAzure(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceCloudAccessAccountAzure,
@@ -29,7 +29,7 @@ func TestAccResourceCloudAccessAccountAzure(t *testing.T) {
 func TestAccResourceCloudAccessAccountAWS(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceCloudAccessAccountAWS,
@@ -49,7 +49,7 @@ func TestAccResourceCloudAccessAccountAWS(t *testing.T) {
 func TestAccResourceCloudAccessAccountGCP(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceCloudAccessAccountGCP,

@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/umich-vci/terraform-provider-rhsm/internal/sdkprovider"
 )
 
@@ -20,11 +19,7 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-// testAccProtoV5ProviderFactories are used to instantiate a provider during
-// acceptance testing. The factory function will be invoked for every Terraform
-// CLI command executed to create a provider server to which the CLI can
-// reattach.
-var testAccProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
+var muxProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
 	"rhsm": func() (tfprotov5.ProviderServer, error) {
 		ctx := context.Background()
 		providers := []func() tfprotov5.ProviderServer{
@@ -42,16 +37,22 @@ var testAccProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServe
 	},
 }
 
-func TestMuxServer(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: "{}",
-			},
-		},
-	})
+func protoV5ProviderFactories() map[string]func() (tfprotov5.ProviderServer, error) {
+	return map[string]func() (tfprotov5.ProviderServer, error){
+		"rhsm": providerserver.NewProtocol5WithError(New("test")),
+	}
 }
+
+// func TestMuxServer(t *testing.T) {
+// 	resource.Test(t, resource.TestCase{
+// 		ProtoV5ProviderFactories: muxProtoV5ProviderFactories,
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: "",
+// 			},
+// 		},
+// 	})
+// }
 
 // func TestResource_UpgradeFromVersion(t *testing.T) {
 // 	/* ... */

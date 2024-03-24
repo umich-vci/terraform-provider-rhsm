@@ -1,32 +1,16 @@
 package sdkprovider
 
 import (
-	"context"
 	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
-	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
-	"github.com/umich-vci/terraform-provider-rhsm/internal/provider"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var testAccProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
-	"rhsm": func() (tfprotov5.ProviderServer, error) {
-		ctx := context.Background()
-		providers := []func() tfprotov5.ProviderServer{
-			New("test")().GRPCProvider,
-			providerserver.NewProtocol5(provider.New("test")),
-		}
-
-		muxServer, err := tf5muxserver.NewMuxServer(ctx, providers...)
-
-		if err != nil {
-			return nil, err
-		}
-
-		return muxServer.ProviderServer(), nil
-	},
+func testProviders() map[string]func() (*schema.Provider, error) {
+	return map[string]func() (*schema.Provider, error){
+		"rhsm": func() (*schema.Provider, error) { return New("test")(), nil },
+	}
 }
 
 func TestProvider(t *testing.T) {
