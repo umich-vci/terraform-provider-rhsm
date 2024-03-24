@@ -1,4 +1,4 @@
-package sdkprovider
+package provider
 
 import (
 	"context"

@@ -1,4 +1,4 @@
-package sdkprovider
+package provider
 
 import (
 	"testing"
@@ -8,8 +8,8 @@ import (
 
 func TestAccDataSourceCloudAccess(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testProviders(),
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV5ProviderFactories: protoV5ProviderFactories(),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceCloudAccess,
