@@ -189,7 +189,7 @@ func (d *CloudAccessDataSource) Schema(ctx context.Context, req datasource.Schem
 							},
 						},
 						"short_name": schema.StringAttribute{
-							Description: "An abreviation of the cloud provider name. Used when adding or removing accounts.",
+							Description: "An abbreviation of the cloud provider name. Used when adding or removing accounts.",
 							Computed:    true,
 						},
 					},
@@ -205,7 +205,13 @@ func (d *CloudAccessDataSource) Configure(ctx context.Context, req datasource.Co
 		return
 	}
 
-	d.client = req.ProviderData.(*apiClient)
+	client, ok := req.ProviderData.(*apiClient)
+	if !ok {
+		resp.Diagnostics.AddError("Failed to configure Cloud Access datasource", "Invalid provider data")
+		return
+	}
+
+	d.client = client
 }
 
 func (d *CloudAccessDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -221,7 +227,7 @@ func (d *CloudAccessDataSource) Read(ctx context.Context, req datasource.ReadReq
 	client := d.client.Client
 	auth := d.client.Auth
 
-	cap, _, err := client.CloudaccessAPI.ListEnabledCloudAccessProviders(auth).Execute()
+	ecap, _, err := client.CloudaccessAPI.ListEnabledCloudAccessProviders(auth).Execute()
 	if err != nil {
 		resp.Diagnostics.AddError("failed to list enabled cloud access providers", err.Error())
 		return
@@ -229,7 +235,7 @@ func (d *CloudAccessDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	cloudProviders := []EnabledAccountsModel{}
 
-	for _, x := range cap.GetBody() {
+	for _, x := range ecap.GetBody() {
 		// cloudProvider := make(map[string]interface{})
 		cloudProvider := EnabledAccountsModel{
 			Name:      types.StringValue(x.GetName()),
