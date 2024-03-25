@@ -6,8 +6,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
-	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
+	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/umich-vci/terraform-provider-rhsm/internal/sdkprovider"
 )
@@ -20,33 +21,39 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-var muxProtoV5ProviderFactories = map[string]func() (tfprotov5.ProviderServer, error){
-	"rhsm": func() (tfprotov5.ProviderServer, error) {
-		ctx := context.Background()
-		providers := []func() tfprotov5.ProviderServer{
-			sdkprovider.New("test")().GRPCProvider,
-			providerserver.NewProtocol5(New("test")),
-		}
+func protoV6ProviderFactories() map[string]func() (tfprotov6.ProviderServer, error) {
+	return map[string]func() (tfprotov6.ProviderServer, error){
+		"rhsm": func() (tfprotov6.ProviderServer, error) {
+			upgradedSdkProvider, err := tf5to6server.UpgradeServer(
+				context.Background(),
+				sdkprovider.New("test")().GRPCProvider,
+			)
 
-		muxServer, err := tf5muxserver.NewMuxServer(ctx, providers...)
+			if err != nil {
+				return nil, err
+			}
 
-		if err != nil {
-			return nil, err
-		}
+			providers := []func() tfprotov6.ProviderServer{
+				func() tfprotov6.ProviderServer {
+					return upgradedSdkProvider
+				},
 
-		return muxServer.ProviderServer(), nil
-	},
-}
+				providerserver.NewProtocol6(New("test")),
+			}
+			muxServer, err := tf6muxserver.NewMuxServer(context.Background(), providers...)
 
-func protoV5ProviderFactories() map[string]func() (tfprotov5.ProviderServer, error) {
-	return map[string]func() (tfprotov5.ProviderServer, error){
-		"rhsm": providerserver.NewProtocol5WithError(New("test")),
+			if err != nil {
+				return nil, err
+			}
+
+			return muxServer.ProviderServer(), nil
+		},
 	}
 }
 
 func TestMuxServer(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		ProtoV5ProviderFactories: muxProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: protoV6ProviderFactories(),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataSourceCloudAccess,

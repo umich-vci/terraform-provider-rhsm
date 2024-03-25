@@ -1,15 +1,44 @@
 package sdkprovider
 
 import (
+	"context"
 	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
+	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
+	"github.com/umich-vci/terraform-provider-rhsm/internal/provider"
 )
 
-func testProviders() map[string]func() (*schema.Provider, error) {
-	return map[string]func() (*schema.Provider, error){
-		"rhsm": func() (*schema.Provider, error) { return New("test")(), nil },
+func protoV6ProviderFactories() map[string]func() (tfprotov6.ProviderServer, error) {
+	return map[string]func() (tfprotov6.ProviderServer, error){
+		"rhsm": func() (tfprotov6.ProviderServer, error) {
+			upgradedSdkProvider, err := tf5to6server.UpgradeServer(
+				context.Background(),
+				New("test")().GRPCProvider,
+			)
+
+			if err != nil {
+				return nil, err
+			}
+
+			providers := []func() tfprotov6.ProviderServer{
+				func() tfprotov6.ProviderServer {
+					return upgradedSdkProvider
+				},
+
+				providerserver.NewProtocol6(provider.New("test")),
+			}
+			muxServer, err := tf6muxserver.NewMuxServer(context.Background(), providers...)
+
+			if err != nil {
+				return nil, err
+			}
+
+			return muxServer.ProviderServer(), nil
+		},
 	}
 }
 
