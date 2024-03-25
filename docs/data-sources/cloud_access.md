@@ -31,7 +31,7 @@ Read-Only:
 - `accounts` (Attributes List) A list of cloud accounts that are enabled for cloud access in the cloud provider. (see [below for nested schema](#nestedatt--enabled_accounts--accounts))
 - `name` (String) The name of the cloud provider.
 - `products` (Attributes List) A list of products that are entitled to the cloud provider. (see [below for nested schema](#nestedatt--enabled_accounts--products))
-- `short_name` (String) An abreviation of the cloud provider name. Used when adding or removing accounts.
+- `short_name` (String) An abbreviation of the cloud provider name. Used when adding or removing accounts.
 
 <a id="nestedatt--enabled_accounts--accounts"></a>
 ### Nested Schema for `enabled_accounts.accounts`

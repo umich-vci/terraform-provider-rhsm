@@ -189,7 +189,7 @@ func (d *CloudAccessDataSource) Schema(ctx context.Context, req datasource.Schem
 							},
 						},
 						"short_name": schema.StringAttribute{
-							Description: "An abreviation of the cloud provider name. Used when adding or removing accounts.",
+							Description: "An abbreviation of the cloud provider name. Used when adding or removing accounts.",
 							Computed:    true,
 						},
 					},
