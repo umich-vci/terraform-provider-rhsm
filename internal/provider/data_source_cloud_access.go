@@ -42,9 +42,9 @@ type EnabledAccountsModel struct {
 
 func (m EnabledAccountsModel) AttributeTypes() map[string]attr.Type {
 	return map[string]attr.Type{
-		"accounts":   types.ObjectType{AttrTypes: AccountsModel{}.AttributeTypes()},
+		"accounts":   types.ListType{ElemType: types.ObjectType{AttrTypes: AccountsModel{}.AttributeTypes()}},
 		"name":       types.StringType,
-		"products":   types.ObjectType{AttrTypes: ProductsModel{}.AttributeTypes()},
+		"products":   types.ListType{ElemType: types.ObjectType{AttrTypes: ProductsModel{}.AttributeTypes()}},
 		"short_name": types.StringType,
 	}
 }
@@ -105,6 +105,7 @@ func (d *CloudAccessDataSource) Schema(ctx context.Context, req datasource.Schem
 					Attributes: map[string]schema.Attribute{
 						"accounts": schema.ListNestedAttribute{
 							Description: "A list of cloud accounts that are enabled for cloud access in the cloud provider.",
+							Computed:    true,
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
 									"date_added": schema.StringAttribute{
