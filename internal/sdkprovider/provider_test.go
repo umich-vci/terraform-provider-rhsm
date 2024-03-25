@@ -1,4 +1,4 @@
-package provider
+package sdkprovider
 
 import (
 	"context"
@@ -9,24 +9,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
 	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/umich-vci/terraform-provider-rhsm/internal/sdkprovider"
+	"github.com/umich-vci/terraform-provider-rhsm/internal/provider"
 )
-
-func testAccPreCheck(t *testing.T) {
-	refreshToken := os.Getenv("RHSM_REFRESH_TOKEN")
-
-	if refreshToken == "" {
-		t.Fatalf("RHSM_REFRESH_TOKEN must be set for acceptance tests to run")
-	}
-}
 
 func protoV6ProviderFactories() map[string]func() (tfprotov6.ProviderServer, error) {
 	return map[string]func() (tfprotov6.ProviderServer, error){
 		"rhsm": func() (tfprotov6.ProviderServer, error) {
 			upgradedSdkProvider, err := tf5to6server.UpgradeServer(
 				context.Background(),
-				sdkprovider.New("test")().GRPCProvider,
+				New("test")().GRPCProvider,
 			)
 
 			if err != nil {
@@ -38,7 +29,7 @@ func protoV6ProviderFactories() map[string]func() (tfprotov6.ProviderServer, err
 					return upgradedSdkProvider
 				},
 
-				providerserver.NewProtocol6(New("test")),
+				providerserver.NewProtocol6(provider.New("test")),
 			}
 			muxServer, err := tf6muxserver.NewMuxServer(context.Background(), providers...)
 
@@ -51,13 +42,16 @@ func protoV6ProviderFactories() map[string]func() (tfprotov6.ProviderServer, err
 	}
 }
 
-func TestMuxServer(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: protoV6ProviderFactories(),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataSourceCloudAccess,
-			},
-		},
-	})
+func TestProvider(t *testing.T) {
+	if err := New("dev")().InternalValidate(); err != nil {
+		t.Fatalf("err: %s", err)
+	}
+}
+
+func testAccPreCheck(t *testing.T) {
+	refreshToken := os.Getenv("RHSM_REFRESH_TOKEN")
+
+	if refreshToken == "" {
+		t.Fatalf("RHSM_REFRESH_TOKEN must be set for acceptance tests to run")
+	}
 }

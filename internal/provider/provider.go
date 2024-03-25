@@ -2,59 +2,30 @@ package provider
 
 import (
 	"context"
-	"fmt"
-	"strings"
+	"os"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/provider"
+	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/umich-vci/gorhsm"
 )
 
-func init() {
-	// Set descriptions to support markdown syntax, this will be used in document generation
-	// and the language server.
-	schema.DescriptionKind = schema.StringMarkdown
+// Ensure RHSMProvider satisfies various provider interfaces.
+var _ provider.Provider = &RHSMProvider{}
 
-	// Customize the content of descriptions when output. For example you can add defaults on
-	// to the exported descriptions if present.
-	schema.SchemaDescriptionBuilder = func(s *schema.Schema) string {
-		desc := s.Description
-		if s.Default != nil {
-			desc += fmt.Sprintf(" Defaults to `%v`.", s.Default)
-		}
-		return strings.TrimSpace(desc)
-	}
+type RHSMProvider struct {
+	// version is set to the provider version on release, "dev" when the
+	// provider is built and ran locally, and "test" when running acceptance
+	// testing.
+	version string
 }
 
-func New(version string) func() *schema.Provider {
-	return func() *schema.Provider {
-		p := &schema.Provider{
-			Schema: map[string]*schema.Schema{
-				"refresh_token": {
-					Description: "This is the [offline token](https://access.redhat.com/articles/3626371#bgenerating-a-new-offline-tokenb-3) used to generate access tokens for Red Hat Subscription Manager. This must be provided in the config or in the environment variable `RHSM_REFRESH_TOKEN`.",
-					Type:        schema.TypeString,
-					Required:    true,
-					DefaultFunc: schema.EnvDefaultFunc("RHSM_REFRESH_TOKEN", nil),
-				},
-			},
-			DataSourcesMap: map[string]*schema.Resource{
-				"rhsm_allocation":             dataSourceAllocation(),
-				"rhsm_allocation_entitlement": dataSourceAllocationEntitlement(),
-				"rhsm_allocation_pools":       dataSourceAllocationPools(),
-				"rhsm_cloud_access":           dataSourceCloudAccess(),
-			},
-			ResourcesMap: map[string]*schema.Resource{
-				"rhsm_allocation":             resourceAllocation(),
-				"rhsm_allocation_entitlement": resourceAllocationEntitlement(),
-				"rhsm_allocation_manifest":    resourceAllocationManifest(),
-				"rhsm_cloud_access_account":   resourceCloudAccessAccount(),
-			},
-		}
-
-		p.ConfigureContextFunc = configure(version, p)
-
-		return p
-	}
+// RHSMProviderModel describes the provider data model.
+type RHSMProviderModel struct {
+	RefreshToken types.String `tfsdk:"refresh_token"`
 }
 
 type apiClient struct {
@@ -62,30 +33,104 @@ type apiClient struct {
 	Client *gorhsm.APIClient
 }
 
-func configure(version string, p *schema.Provider) func(context.Context, *schema.ResourceData) (interface{}, diag.Diagnostics) {
-	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
+func (p *RHSMProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
+	resp.TypeName = "rhsm"
+	resp.Version = p.version
+}
 
-		userAgent := p.UserAgent("terraform-provider-rhsm", version)
-		refreshToken := d.Get("refresh_token").(string)
+func (p *RHSMProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"refresh_token": schema.StringAttribute{
+				MarkdownDescription: "This is the [offline token](https://access.redhat.com/articles/3626371#bgenerating-a-new-offline-tokenb-3) used to generate access tokens for Red Hat Subscription Manager. This must be provided in the config or in the environment variable `RHSM_REFRESH_TOKEN`.",
+				Optional:            true,
+			},
+		},
+	}
+}
 
-		config := gorhsm.NewConfiguration()
+func (p *RHSMProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+	var config RHSMProviderModel
 
-		token, err := gorhsm.GenerateAccessToken(refreshToken)
-		if err != nil {
-			return nil, diag.FromErr(err)
-		}
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
-		config.UserAgent = userAgent
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-		tokenMap := map[string]gorhsm.APIKey{"Bearer": {
-			Key:    token.AccessToken,
-			Prefix: token.TokenType,
-		}}
+	if config.RefreshToken.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("refresh_token"),
+			"Missing refresh_token",
+			"The provider cannot create the RHSM client as there is an unknown configuration value for the API refresh_token. "+
+				"Either target apply the source of the value first, set the value statically in the configuration, or use the RHSM_REFRESH_TOKEN environment variable.",
+		)
+	}
 
-		auth := context.WithValue(context.Background(), gorhsm.ContextAPIKeys, tokenMap)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-		client := gorhsm.NewAPIClient(config)
+	// Default values to environment variables, but override
+	// with Terraform configuration value if set.
+	refreshToken := os.Getenv("RHSM_REFRESH_TOKEN")
 
-		return &apiClient{Auth: auth, Client: client}, nil
+	if !config.RefreshToken.IsNull() {
+		refreshToken = config.RefreshToken.ValueString()
+	}
+
+	if refreshToken == "" {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("refresh_token"),
+			"Missing refresh_token",
+			"The provider cannot create the RHSM client as there is a missing or empty value for the refresh_token. "+
+				"Set the value in the configuration or use the RHSM_REFRESH_TOKEN environment variable. "+
+				"If either is already set, ensure the value is not empty.",
+		)
+	}
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	rhsmConfig := gorhsm.NewConfiguration()
+	token, err := gorhsm.GenerateAccessToken(refreshToken)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to generate access token", err.Error())
+		return
+	}
+
+	tokenMap := map[string]gorhsm.APIKey{"Bearer": {
+		Key:    token.AccessToken,
+		Prefix: token.TokenType,
+	}}
+
+	rhsmClient := &apiClient{
+		Auth:   context.WithValue(context.Background(), gorhsm.ContextAPIKeys, tokenMap),
+		Client: gorhsm.NewAPIClient(rhsmConfig),
+	}
+
+	// Make the BlueCat client available during DataSource and Resource
+	// type Configure methods.
+	resp.DataSourceData = rhsmClient
+	resp.ResourceData = rhsmClient
+
+}
+
+func (p *RHSMProvider) Resources(ctx context.Context) []func() resource.Resource {
+	return []func() resource.Resource{
+		NewCloudAccessAccountResource,
+	}
+}
+
+func (p *RHSMProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
+	return []func() datasource.DataSource{
+		NewCloudAccessDataSource,
+	}
+}
+
+func New(version string) provider.Provider {
+	return &RHSMProvider{
+		version: version,
 	}
 }

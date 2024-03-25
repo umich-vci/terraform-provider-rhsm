@@ -1,4 +1,4 @@
-package provider
+package sdkprovider
 
 import (
 	"context"
@@ -11,6 +11,8 @@ import (
 func dataSourceAllocationEntitlement() *schema.Resource {
 	return &schema.Resource{
 		Description: "Data source to get information about an entitlement associated with a Red Hat Subscription Manager allocation.",
+		DeprecationMessage: "As of Red Hat Satellite 6.11, \"Entitlement-based Subscription Management is deprecated" +
+			"and will be removed in a future release.\"",
 
 		ReadContext: dataSourceAllocationEntitlementRead,
 
@@ -68,7 +70,7 @@ func dataSourceAllocationEntitlementRead(ctx context.Context, d *schema.Resource
 	entitlementID := d.Get("entitlement_id").(string)
 	include := "entitlements"
 
-	alloc, _, err := client.AllocationApi.ShowAllocation(auth, allocationUUID).Include(include).Execute()
+	alloc, _, err := client.AllocationAPI.ShowAllocation(auth, allocationUUID).Include(include).Execute()
 	if err != nil {
 		return diag.FromErr(err)
 	}

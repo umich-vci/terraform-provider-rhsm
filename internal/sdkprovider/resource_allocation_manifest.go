@@ -1,4 +1,4 @@
-package provider
+package sdkprovider
 
 import (
 	"context"
@@ -16,6 +16,8 @@ import (
 func resourceAllocationManifest() *schema.Resource {
 	return &schema.Resource{
 		Description: "Resource to create a manifest from a RHSM subscription allocation that can be uploaded to a Red Hat Satellite server.",
+		DeprecationMessage: "As of Red Hat Satellite 6.11, \"Entitlement-based Subscription Management is deprecated" +
+			"and will be removed in a future release.\"",
 
 		CreateContext: resourceAllocationManifestCreate,
 		ReadContext:   resourceAllocationManifestRead,
@@ -59,7 +61,7 @@ func resourceAllocationManifestRead(ctx context.Context, d *schema.ResourceData,
 
 	uuid := d.Id()
 
-	alloc, resp, err := client.AllocationApi.ShowAllocation(auth, uuid).Execute()
+	alloc, resp, err := client.AllocationAPI.ShowAllocation(auth, uuid).Execute()
 	if err != nil {
 		if resp != nil {
 			if resp.StatusCode == 404 {
@@ -81,14 +83,14 @@ func resourceAllocationManifestCreate(ctx context.Context, d *schema.ResourceDat
 
 	allocationUUID := d.Get("allocation_uuid").(string)
 
-	alloc, _, err := client.AllocationApi.ShowAllocation(auth, allocationUUID).Execute()
+	alloc, _, err := client.AllocationAPI.ShowAllocation(auth, allocationUUID).Execute()
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	d.Set("manifest_last_modified", alloc.Body.GetLastModified())
 
-	exportJob, _, err := client.AllocationApi.ExportAllocation(auth, allocationUUID).Execute()
+	exportJob, _, err := client.AllocationAPI.ExportAllocation(auth, allocationUUID).Execute()
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -98,7 +100,7 @@ func resourceAllocationManifestCreate(ctx context.Context, d *schema.ResourceDat
 	var manifestURL string
 	for {
 		time.Sleep(5 * time.Second)
-		status, resp, err := client.AllocationApi.ExportJobAllocation(auth, allocationUUID, exportJobID).Execute()
+		status, resp, err := client.AllocationAPI.ExportJobAllocation(auth, allocationUUID, exportJobID).Execute()
 		if err != nil {
 			return diag.FromErr(err)
 		}

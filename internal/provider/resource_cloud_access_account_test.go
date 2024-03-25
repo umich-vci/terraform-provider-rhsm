@@ -3,13 +3,14 @@ package provider
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 )
 
 func TestAccResourceCloudAccessAccountAzure(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: providerFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: protoV6ProviderFactories(),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceCloudAccessAccountAzure,
@@ -28,8 +29,8 @@ func TestAccResourceCloudAccessAccountAzure(t *testing.T) {
 
 func TestAccResourceCloudAccessAccountAWS(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: providerFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: protoV6ProviderFactories(),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceCloudAccessAccountAWS,
@@ -48,8 +49,8 @@ func TestAccResourceCloudAccessAccountAWS(t *testing.T) {
 
 func TestAccResourceCloudAccessAccountGCP(t *testing.T) {
 	resource.UnitTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: providerFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: protoV6ProviderFactories(),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceCloudAccessAccountGCP,
@@ -61,6 +62,40 @@ func TestAccResourceCloudAccessAccountGCP(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"rhsm_cloud_access_account.gcp_test_account", "provider_short_name", "GCE"),
 				),
+			},
+		},
+	})
+}
+
+func TestCloudAccessAccount_UpgradeFromVersion(t *testing.T) {
+	/* ... */
+	resource.Test(t, resource.TestCase{
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"rhsm": {
+						VersionConstraint: "0.6.1",
+						Source:            "umich-vci/rhsm",
+					},
+				},
+				Config: testAccResourceCloudAccessAccountAWS,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"rhsm_cloud_access_account.aws_test_account", "nickname", "Terraform Acceptance Test AWS Account"),
+					resource.TestCheckResourceAttr(
+						"rhsm_cloud_access_account.aws_test_account", "account_id", "012345678912"),
+					resource.TestCheckResourceAttr(
+						"rhsm_cloud_access_account.aws_test_account", "provider_short_name", "AWS"),
+				),
+			},
+			{
+				ProtoV6ProviderFactories: protoV6ProviderFactories(),
+				Config:                   testAccResourceCloudAccessAccountAWS,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})

@@ -1,21 +1,21 @@
-package provider
+package sdkprovider
 
 import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccDataSourceAllocationPools(t *testing.T) {
+func TestAccDataSourceAllocationEntitlement(t *testing.T) {
 	t.Skip("data source not yet implemented, remove this once you add your own code")
 
 	resource.UnitTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: providerFactories,
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: protoV6ProviderFactories(),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAllocationPools,
+				Config: testAccDataSourceAllocationEntitlement,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(
 						"data.scaffolding_data_source.foo", "sample_attribute", regexp.MustCompile("^ba")),
@@ -25,7 +25,7 @@ func TestAccDataSourceAllocationPools(t *testing.T) {
 	})
 }
 
-const testAccDataSourceAllocationPools = `
+const testAccDataSourceAllocationEntitlement = `
 data "scaffolding_data_source" "foo" {
   sample_attribute = "bar"
 }

@@ -3,254 +3,497 @@ package provider
 import (
 	"context"
 	"fmt"
+	"io"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/umich-vci/gorhsm"
 )
 
-func resourceCloudAccessAccount() *schema.Resource {
-	return &schema.Resource{
-		Description: "Resource to manage entitlement for Red Hat Cloud Access for an account in a supported cloud provider.",
+// Ensure provider defined types fully satisfy framework interfaces.
+var _ resource.Resource = &CloudAccessAccountResource{}
+var _ resource.ResourceWithImportState = &CloudAccessAccountResource{}
 
-		CreateContext: resourceCloudAccessAccountCreate,
-		ReadContext:   resourceCloudAccessAccountRead,
-		UpdateContext: resourceCloudAccessAccountUpdate,
-		DeleteContext: resourceCloudAccessAccountDelete,
+func NewCloudAccessAccountResource() resource.Resource {
+	return &CloudAccessAccountResource{}
+}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+// CloudAccessAccountResource defines the resource implementation.
+type CloudAccessAccountResource struct {
+	client *apiClient
+}
 
-		Schema: map[string]*schema.Schema{
-			"account_id": {
-				Description:  "The ID of a cloud account that you would like to request Red Hat Cloud Access for. For GCE this should be a Google Group.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsNotEmpty,
-				ForceNew:     true,
-			},
-			"provider_short_name": {
-				Description:  "The short name of the cloud provider that the `account_id` is in. This must be one of \"AWS\", \"GCE\", or \"MSAZ\".  Other cloud providers are supported but have not been tested so they are not in the list of valid options.",
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(cloudAccessAccountProviders, false),
-			},
-			"gold_images": {
-				Description: "A list of gold images to request access to for the account. Images available to a cloud provider can be found with the `rhsm_cloud_access` data source. Once you request access to a gold image, it is not possible to disable access via the API.",
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
+// CloudAccessAccountResourceModel describes the resource data model.
+type CloudAccessAccountResourceModel struct {
+	ID                types.String `tfsdk:"id"`
+	AccountID         types.String `tfsdk:"account_id"`
+	ProviderShortName types.String `tfsdk:"provider_short_name"`
+	GoldImages        types.Set    `tfsdk:"gold_images"`
+	Nickname          types.String `tfsdk:"nickname"`
+	DateAdded         types.String `tfsdk:"date_added"`
+	GoldImageStatus   types.Set    `tfsdk:"gold_image_status"`
+	SourceID          types.String `tfsdk:"source_id"`
+	Verified          types.Bool   `tfsdk:"verified"`
+}
+
+type GoldImageStatusModel struct {
+	Description types.String `tfsdk:"description"`
+	Name        types.String `tfsdk:"name"`
+	Status      types.String `tfsdk:"status"`
+}
+
+func (m GoldImageStatusModel) AttributeTypes() map[string]attr.Type {
+	return map[string]attr.Type{
+		"description": types.StringType,
+		"name":        types.StringType,
+		"status":      types.StringType,
+	}
+}
+
+func (r *CloudAccessAccountResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_cloud_access_account"
+}
+
+func (r *CloudAccessAccountResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		MarkdownDescription: "Resource to manage entitlement for Red Hat Cloud Access for an account in a supported cloud provider.",
+
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed:            true,
+				MarkdownDescription: "The ID of the cloud account in the format `provider_short_name:account_id`.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"nickname": {
-				Description: "A nickname to help describe the account.",
-				Type:        schema.TypeString,
+			"account_id": schema.StringAttribute{
+				Description: "The ID of a cloud account that you would like to request Red Hat Cloud Access for. For GCE this should be a Google Group.",
+				Required:    true,
+				Validators:  []validator.String{stringvalidator.NoneOf("")},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"provider_short_name": schema.StringAttribute{
+				Description: "The short name of the cloud provider that the `account_id` is in. This must be one of \"AWS\", \"GCE\", or \"MSAZ\".  Other cloud providers are supported but have not been tested so they are not in the list of valid options.",
+				Required:    true,
+				Validators:  []validator.String{stringvalidator.OneOf(cloudAccessAccountProviders...)},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"gold_images": schema.SetAttribute{
+				Description: "A list of gold images to request access to for the account. Images available to a cloud provider can be found with the `rhsm_cloud_access` data source. Once you request access to a gold image, it is not possible to disable access via the API.",
 				Optional:    true,
-				Default:     "",
+				Computed:    true,
+				Default:     setdefault.StaticValue(types.SetValueMust(types.StringType, []attr.Value{})),
+				ElementType: types.StringType,
 			},
-			"date_added": {
+			"nickname": schema.StringAttribute{
+				Description: "A nickname to help describe the account.",
+				Optional:    true,
+			},
+			"date_added": schema.StringAttribute{
 				Description: "The date the cloud account was added to Red Hat Cloud Access.",
-				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"gold_image_status": {
+			"gold_image_status": schema.SetNestedAttribute{
 				Description: "The status of any requests for gold image access for the cloud account.",
-				Type:        schema.TypeSet,
 				Computed:    true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"description": {
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"description": schema.StringAttribute{
 							Description: "The description of the gold image.",
-							Type:        schema.TypeString,
 							Computed:    true,
 						},
-						"name": {
+						"name": schema.StringAttribute{
 							Description: "The name of the gold image.",
-							Type:        schema.TypeString,
 							Computed:    true,
 						},
-						"status": {
+						"status": schema.StringAttribute{
 							Description: "The status of the gold image request.",
-							Type:        schema.TypeString,
 							Computed:    true,
 						},
 					},
 				},
 			},
-			"source_id": {
+			"source_id": schema.StringAttribute{
 				Description: "Source ID of linked account. Only for accounts created via Sources on cloud.redhat.com.",
-				Type:        schema.TypeString,
 				Computed:    true,
 			},
-			"verified": {
+			"verified": schema.BoolAttribute{
 				Description: "Is the cloud provider account verified for RHSM Auto Registration?",
-				Type:        schema.TypeBool,
 				Computed:    true,
 			},
 		},
 	}
 }
 
-func resourceCloudAccessAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*apiClient).Client
-	auth := meta.(*apiClient).Auth
-
-	shortName, accountID, err := resourceCloudAccessAccountSplitID(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
+func (r *CloudAccessAccountResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	// Prevent panic if the provider has not been configured.
+	if req.ProviderData == nil {
+		return
 	}
 
-	foundAccount := false
-
-	cap, _, err := client.CloudaccessApi.ListEnabledCloudAccessProviders(auth).Execute()
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	for _, x := range cap.GetBody() {
-		if x.GetShortName() == shortName {
-			for _, y := range x.GetAccounts() {
-				if y.Id == accountID {
-					foundAccount = true
-					d.Set("provider_short_name", shortName)
-					d.Set("account_id", accountID)
-					d.Set("nickname", y.GetNickname())
-					d.Set("date_added", y.GetDateAdded())
-					d.Set("source_id", y.GetSourceId())
-					d.Set("verified", y.GetVerified())
-
-					goldImageStatus := make([]map[string]interface{}, 0)
-					goldImages := []string{}
-					for _, z := range y.GetGoldImageStatus() {
-						goldImage := make(map[string]interface{})
-						goldImage["description"] = z.GetDescription()
-						goldImage["name"] = z.GetName()
-						goldImage["status"] = z.GetStatus()
-						goldImageStatus = append(goldImageStatus, goldImage)
-						goldImages = append(goldImages, z.GetName())
-					}
-					d.Set("gold_image_status", goldImageStatus)
-					d.Set("gold_images", goldImages)
-					break
-				}
-			}
-		}
-	}
-
-	if !foundAccount {
-		d.SetId("")
-	}
-
-	return nil
+	r.client = req.ProviderData.(*apiClient)
 }
 
-func resourceCloudAccessAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*apiClient).Client
-	auth := meta.(*apiClient).Auth
+func (r *CloudAccessAccountResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data CloudAccessAccountResourceModel
 
-	accountID := d.Get("account_id").(string)
-	shortName := d.Get("provider_short_name").(string)
-	nickname := d.Get("nickname").(string)
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	client := r.client.Client
+	auth := r.client.Auth
+
+	data.ID = types.StringValue(fmt.Sprintf("%s:%s", data.ProviderShortName.ValueString(), data.AccountID.ValueString()))
 
 	account := &gorhsm.AddProviderAccount{
-		Id:       &accountID,
-		Nickname: &nickname,
+		Id:       data.AccountID.ValueStringPointer(),
+		Nickname: data.Nickname.ValueStringPointer(),
 	}
 	accountList := []gorhsm.AddProviderAccount{*account}
 
-	_, err := client.CloudaccessApi.AddProviderAccounts(auth, shortName).Account(accountList).Execute()
+	apa, err := client.CloudaccessAPI.AddProviderAccounts(auth, data.ProviderShortName.ValueString()).Account(accountList).Execute()
+	if apa != nil {
+		defer apa.Body.Close()
+	}
 	if err != nil {
-		return diag.FromErr(err)
+		apaBody, e := io.ReadAll(apa.Body)
+		if e != nil && apaBody != nil {
+			resp.Diagnostics.AddError("Failed to create Cloud Access Account", err.Error())
+
+		} else {
+			resp.Diagnostics.AddError("Failed to create Cloud Access Account", string(apaBody))
+		}
+		return
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", shortName, accountID))
+	var goldImages []string
+	data.GoldImages.ElementsAs(ctx, &goldImages, false)
 
-	if g, ok := d.GetOk("gold_images"); ok {
-		rawGoldImages := g.(*schema.Set).List()
-		goldimages := []string{}
-		for x := range rawGoldImages {
-			goldimages = append(goldimages, rawGoldImages[x].(string))
+	// do not enable gold images if none are specified
+	if len(goldImages) > 0 {
+		gi := &gorhsm.EnableGoldImagesRequest{
+			Accounts: []string{data.AccountID.ValueString()},
+			Images:   goldImages,
 		}
+
+		egi, err := client.CloudaccessAPI.EnableGoldImages(auth, data.ProviderShortName.ValueString()).GoldImages(*gi).Execute()
+		if egi != nil {
+			defer egi.Body.Close()
+		}
+		if err != nil {
+			egiBody, e := io.ReadAll(egi.Body)
+			if e != nil && egiBody != nil {
+				resp.Diagnostics.AddError("Failed to enable gold images", err.Error())
+			} else {
+				resp.Diagnostics.AddError("Failed to enable gold images", string(egiBody))
+			}
+			return
+		}
+	}
+	caps, capsRaw, err := client.CloudaccessAPI.ListEnabledCloudAccessProviders(auth).Execute()
+	if capsRaw != nil {
+		defer capsRaw.Body.Close()
+	}
+	if err != nil {
+		capsBody, e := io.ReadAll(capsRaw.Body)
+		if e != nil && capsBody != nil {
+			resp.Diagnostics.AddError("Failed to list enabled cloud access providers", err.Error())
+		} else {
+			resp.Diagnostics.AddError("Failed to list enabled cloud access providers", string(capsBody))
+		}
+		return
+	}
+
+	caa, diag := flattenCloudAccessAccount(ctx, caps, data.ProviderShortName.ValueString(), data.AccountID.ValueString())
+	if diag.HasError() {
+		resp.Diagnostics.Append(diag...)
+		return
+	}
+
+	// no matching account was found which should not happen since we just created it
+	if caa == nil {
+		resp.Diagnostics.AddError("Failed to find created Cloud Access Account", "No matching account was found")
+		return
+	}
+
+	data.AccountID = caa.AccountID
+	data.ProviderShortName = caa.ProviderShortName
+	data.Nickname = caa.Nickname
+	data.DateAdded = caa.DateAdded
+	data.SourceID = caa.SourceID
+	data.Verified = caa.Verified
+	data.GoldImages = caa.GoldImages
+	data.GoldImageStatus = caa.GoldImageStatus
+
+	// Write logs using the tflog package
+	// Documentation: https://terraform.io/plugin/log
+	tflog.Trace(ctx, "created a resource")
+
+	// Save data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *CloudAccessAccountResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data CloudAccessAccountResourceModel
+
+	// Read Terraform prior state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	client := r.client.Client
+	auth := r.client.Auth
+
+	shortName, accountID, err := resourceCloudAccessAccountSplitID(data.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to parse Cloud Access Account resource ID", err.Error())
+		return
+	}
+
+	caps, _, err := client.CloudaccessAPI.ListEnabledCloudAccessProviders(auth).Execute()
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to list enabled cloud access providers", err.Error())
+		return
+	}
+
+	caa, diag := flattenCloudAccessAccount(ctx, caps, shortName, accountID)
+	if diag.HasError() {
+		resp.Diagnostics.Append(diag...)
+		return
+	}
+
+	// no matching account was found and no error was returned
+	if caa == nil {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	data.AccountID = caa.AccountID
+	data.ProviderShortName = caa.ProviderShortName
+	data.Nickname = caa.Nickname
+	data.DateAdded = caa.DateAdded
+	data.SourceID = caa.SourceID
+	data.Verified = caa.Verified
+	data.GoldImages = caa.GoldImages
+	data.GoldImageStatus = caa.GoldImageStatus
+
+	// Save updated data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
+
+func (r *CloudAccessAccountResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var data, state CloudAccessAccountResourceModel
+
+	// Read Terraform plan data into the model
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	client := r.client.Client
+	auth := r.client.Auth
+
+	shortName, accountID, err := resourceCloudAccessAccountSplitID(data.ID.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to parse Cloud Access Account resource ID", err.Error())
+		return
+	}
+
+	if !data.Nickname.Equal(state.Nickname) {
+		account := &gorhsm.UpdateProviderAccountRequest{Nickname: data.Nickname.ValueString()}
+		_, err := client.CloudaccessAPI.UpdateProviderAccount(auth, shortName, accountID).Account(*account).Execute()
+		if err != nil {
+			resp.Diagnostics.AddError("Failed to update Cloud Access Account nickname", err.Error())
+			return
+		}
+	}
+
+	if !data.GoldImages.Equal(state.GoldImages) {
+		goldImages := []string{}
+		resp.Diagnostics.Append(data.GoldImages.ElementsAs(ctx, goldImages, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
 		gi := &gorhsm.EnableGoldImagesRequest{
 			Accounts: []string{accountID},
-			Images:   goldimages,
+			Images:   goldImages,
 		}
 
-		_, err = client.CloudaccessApi.EnableGoldImages(auth, shortName).GoldImages(*gi).Execute()
+		_, err := client.CloudaccessAPI.EnableGoldImages(auth, shortName).GoldImages(*gi).Execute()
 		if err != nil {
-			d.Set("gold_images", []string{})
-			return diag.FromErr(err)
+			resp.Diagnostics.AddError("Failed to enable gold images", err.Error())
+			return
 		}
 	}
 
-	return resourceCloudAccessAccountRead(ctx, d, meta)
+	caps, _, err := client.CloudaccessAPI.ListEnabledCloudAccessProviders(auth).Execute()
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to list enabled cloud access providers", err.Error())
+		return
+	}
+
+	caa, diag := flattenCloudAccessAccount(ctx, caps, data.ProviderShortName.ValueString(), data.AccountID.ValueString())
+	if diag.HasError() {
+		resp.Diagnostics.Append(diag...)
+		return
+	}
+
+	// no matching account was found which should not happen since we just updated it
+	if caa == nil {
+		resp.Diagnostics.AddError("Failed to find updated Cloud Access Account", "No matching account was found")
+		return
+	}
+
+	data.AccountID = caa.AccountID
+	data.ProviderShortName = caa.ProviderShortName
+	data.Nickname = caa.Nickname
+	data.DateAdded = caa.DateAdded
+	data.SourceID = caa.SourceID
+	data.Verified = caa.Verified
+	data.GoldImages = caa.GoldImages
+	data.GoldImageStatus = caa.GoldImageStatus
+
+	// Save updated data into Terraform state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func resourceCloudAccessAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*apiClient).Client
-	auth := meta.(*apiClient).Auth
+func (r *CloudAccessAccountResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data CloudAccessAccountResourceModel
 
-	shortName, accountID, err := resourceCloudAccessAccountSplitID(d.Id())
+	// Read Terraform prior state data into the model
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	client := r.client.Client
+	auth := r.client.Auth
+
+	shortName, accountID, err := resourceCloudAccessAccountSplitID(data.ID.ValueString())
 	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if d.HasChange("nickname") {
-		account := &gorhsm.UpdateProviderAccountRequest{Nickname: d.Get("nickname").(string)}
-		_, err := client.CloudaccessApi.UpdateProviderAccount(auth, shortName, accountID).Account(*account).Execute()
-		if err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	if d.HasChange("gold_images") {
-		if g, ok := d.GetOk("gold_images"); ok {
-			rawGoldImages := g.(*schema.Set).List()
-			goldimages := []string{}
-			for x := range rawGoldImages {
-				goldimages = append(goldimages, rawGoldImages[x].(string))
-			}
-			gi := &gorhsm.EnableGoldImagesRequest{
-				Accounts: []string{accountID},
-				Images:   goldimages,
-			}
-
-			_, err := client.CloudaccessApi.EnableGoldImages(auth, shortName).GoldImages(*gi).Execute()
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		}
-	}
-
-	return resourceCloudAccessAccountRead(ctx, d, meta)
-}
-
-func resourceCloudAccessAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	client := meta.(*apiClient).Client
-	auth := meta.(*apiClient).Auth
-
-	shortName, accountID, err := resourceCloudAccessAccountSplitID(d.Id())
-	if err != nil {
-		return diag.FromErr(err)
+		resp.Diagnostics.AddError("Failed to parse Cloud Access Account resource ID", err.Error())
+		return
 	}
 
 	remove := &gorhsm.RemoveProviderAccountRequest{
 		Id: accountID,
 	}
 
-	_, err = client.CloudaccessApi.RemoveProviderAccount(auth, shortName).Account(*remove).Execute()
+	_, err = client.CloudaccessAPI.RemoveProviderAccount(auth, shortName).Account(*remove).Execute()
 	if err != nil {
-		return diag.FromErr(err)
+		resp.Diagnostics.AddError("Failed to remove Cloud Access Account", err.Error())
+		return
 	}
 
-	d.SetId("")
+	resp.State.RemoveResource(ctx)
+}
 
-	return nil
+func (r *CloudAccessAccountResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+type CloudAccessAccountModel struct {
+	ID                types.String
+	AccountID         types.String
+	ProviderShortName types.String
+	GoldImages        types.Set
+	Nickname          types.String
+	DateAdded         types.String
+	GoldImageStatus   types.Set
+	SourceID          types.String
+	Verified          types.Bool
+}
+
+func flattenCloudAccessAccount(ctx context.Context, caps *gorhsm.ListEnabledCloudAccessProviders200Response, shortName string, accountID string) (*CloudAccessAccountModel, diag.Diagnostics) {
+	var d diag.Diagnostics
+
+	if caps == nil {
+		return nil, d
+	}
+
+	caa := new(CloudAccessAccountModel)
+
+	for _, x := range caps.GetBody() {
+		if x.GetShortName() == shortName {
+			for _, y := range x.GetAccounts() {
+				if y.Id == accountID {
+					goldImageStatus := []types.Object{}
+					goldImages := []attr.Value{}
+					for _, z := range y.GetGoldImageStatus() {
+						// goldImage := make(map[string]attr.Value)
+						// goldImage["description"] = types.StringValue(z.GetDescription())
+						// goldImage["name"] = types.StringValue(z.GetName())
+						// goldImage["status"] = types.StringValue(z.GetStatus())
+						goldImage := GoldImageStatusModel{
+							Description: types.StringValue(z.GetDescription()),
+							Name:        types.StringValue(z.GetDescription()),
+							Status:      types.StringValue(*z.Status),
+						}
+						goldImageObject, diag := types.ObjectValueFrom(ctx, goldImage.AttributeTypes(), goldImage)
+						if diag.HasError() {
+							d.Append(diag...)
+							return nil, d
+						}
+						goldImageStatus = append(goldImageStatus, goldImageObject)
+						goldImages = append(goldImages, types.StringValue(z.GetName()))
+					}
+
+					goldImageStatusSet, diag := types.SetValueFrom(ctx,
+						types.ObjectType{AttrTypes: GoldImageStatusModel{}.AttributeTypes()}, goldImageStatus)
+					if diag.HasError() {
+						d.Append(diag...)
+						return nil, d
+					}
+
+					goldImagesSet, diag := types.SetValue(types.StringType, goldImages)
+					if diag.HasError() {
+						d.Append(diag...)
+						return nil, d
+					}
+
+					caa = &CloudAccessAccountModel{
+						ID:                types.StringValue(fmt.Sprintf("%s:%s", shortName, accountID)),
+						AccountID:         types.StringValue(accountID),
+						ProviderShortName: types.StringValue(shortName),
+						Nickname:          types.StringValue(y.GetNickname()),
+						DateAdded:         types.StringValue(y.GetDateAdded()),
+						SourceID:          types.StringValue(y.GetSourceId()),
+						Verified:          types.BoolValue(y.GetVerified()),
+						GoldImages:        goldImagesSet,
+						GoldImageStatus:   goldImageStatusSet,
+					}
+					break
+				}
+			}
+			break
+		}
+	}
+	return caa, d
 }
 
 func resourceCloudAccessAccountSplitID(id string) (shortName string, accountID string, err error) {
