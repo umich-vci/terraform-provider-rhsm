@@ -124,7 +124,9 @@ func (p *RHSMProvider) Resources(ctx context.Context) []func() resource.Resource
 }
 
 func (p *RHSMProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{}
+	return []func() datasource.DataSource{
+		NewCloudAccessDataSource,
+	}
 }
 
 func New(version string) provider.Provider {

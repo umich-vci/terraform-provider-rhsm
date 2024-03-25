@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-mux/tf5muxserver"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/umich-vci/terraform-provider-rhsm/internal/sdkprovider"
 )
 
@@ -43,16 +44,16 @@ func protoV5ProviderFactories() map[string]func() (tfprotov5.ProviderServer, err
 	}
 }
 
-// func TestMuxServer(t *testing.T) {
-// 	resource.Test(t, resource.TestCase{
-// 		ProtoV5ProviderFactories: muxProtoV5ProviderFactories,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: "",
-// 			},
-// 		},
-// 	})
-// }
+func TestMuxServer(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV5ProviderFactories: muxProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceCloudAccess,
+			},
+		},
+	})
+}
 
 // func TestResource_UpgradeFromVersion(t *testing.T) {
 // 	/* ... */
