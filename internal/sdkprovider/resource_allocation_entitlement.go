@@ -11,6 +11,8 @@ import (
 func resourceAllocationEntitlement() *schema.Resource {
 	return &schema.Resource{
 		Description: "Resource to manage entitlements to a RHSM Subscription Allocation for a Red Hat Satellite server.",
+		DeprecationMessage: "As of Red Hat Satellite 6.11, \"Entitlement-based Subscription Management is deprecated" +
+			"and will be removed in a future release.\"",
 
 		CreateContext: resourceAllocationEntitlementCreate,
 		ReadContext:   resourceAllocationEntitlementRead,

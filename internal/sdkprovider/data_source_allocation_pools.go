@@ -11,6 +11,8 @@ import (
 func dataSourceAllocationPools() *schema.Resource {
 	return &schema.Resource{
 		Description: "Data source to get information about pools available to a Red Hat Subscription Manager allocation.",
+		DeprecationMessage: "As of Red Hat Satellite 6.11, \"Entitlement-based Subscription Management is deprecated" +
+			"and will be removed in a future release.\"",
 
 		ReadContext: dataSourceAllocationPoolsRead,
 

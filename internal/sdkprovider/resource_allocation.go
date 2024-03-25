@@ -14,6 +14,8 @@ var nameRegex, _ = regexp.Compile(`^[a-zA-Z0-9\_\-\.]{1,100}$`)
 func resourceAllocation() *schema.Resource {
 	return &schema.Resource{
 		Description: "Resource to manage a RHSM Subscription allocation for a Red Hat Satellite server.",
+		DeprecationMessage: "As of Red Hat Satellite 6.11, \"Entitlement-based Subscription Management is deprecated" +
+			"and will be removed in a future release.\"",
 
 		CreateContext: resourceAllocationCreate,
 		ReadContext:   resourceAllocationRead,

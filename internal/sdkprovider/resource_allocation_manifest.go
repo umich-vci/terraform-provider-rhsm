@@ -16,6 +16,8 @@ import (
 func resourceAllocationManifest() *schema.Resource {
 	return &schema.Resource{
 		Description: "Resource to create a manifest from a RHSM subscription allocation that can be uploaded to a Red Hat Satellite server.",
+		DeprecationMessage: "As of Red Hat Satellite 6.11, \"Entitlement-based Subscription Management is deprecated" +
+			"and will be removed in a future release.\"",
 
 		CreateContext: resourceAllocationManifestCreate,
 		ReadContext:   resourceAllocationManifestRead,
