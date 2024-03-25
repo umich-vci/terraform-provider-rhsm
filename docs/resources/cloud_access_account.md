@@ -54,7 +54,7 @@ resource "rhsm_cloud_access_account" "test_group" {
 ### Read-Only
 
 - `date_added` (String) The date the cloud account was added to Red Hat Cloud Access.
-- `gold_image_status` (Set of Object) The status of any requests for gold image access for the cloud account. (see [below for nested schema](#nestedatt--gold_image_status))
+- `gold_image_status` (Attributes Set) The status of any requests for gold image access for the cloud account. (see [below for nested schema](#nestedatt--gold_image_status))
 - `id` (String) The ID of the cloud account in the format `provider_short_name:account_id`.
 - `source_id` (String) Source ID of linked account. Only for accounts created via Sources on cloud.redhat.com.
 - `verified` (Boolean) Is the cloud provider account verified for RHSM Auto Registration?
@@ -64,6 +64,6 @@ resource "rhsm_cloud_access_account" "test_group" {
 
 Read-Only:
 
-- `description` (String)
-- `name` (String)
-- `status` (String)
+- `description` (String) The description of the gold image.
+- `name` (String) The name of the gold image.
+- `status` (String) The status of the gold image request.

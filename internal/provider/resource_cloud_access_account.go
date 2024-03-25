@@ -108,14 +108,23 @@ func (r *CloudAccessAccountResource) Schema(ctx context.Context, req resource.Sc
 				Description: "The date the cloud account was added to Red Hat Cloud Access.",
 				Computed:    true,
 			},
-			"gold_image_status": schema.SetAttribute{
+			"gold_image_status": schema.SetNestedAttribute{
 				Description: "The status of any requests for gold image access for the cloud account.",
 				Computed:    true,
-				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						"description": types.StringType,
-						"name":        types.StringType,
-						"status":      types.StringType,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"description": schema.StringAttribute{
+							Description: "The description of the gold image.",
+							Computed:    true,
+						},
+						"name": schema.StringAttribute{
+							Description: "The name of the gold image.",
+							Computed:    true,
+						},
+						"status": schema.StringAttribute{
+							Description: "The status of the gold image request.",
+							Computed:    true,
+						},
 					},
 				},
 			},
