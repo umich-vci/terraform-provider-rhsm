@@ -1,19 +1,12 @@
-<a href="https://terraform.io">
-    <img src="https://cdn.rawgit.com/hashicorp/terraform-website/master/content/source/assets/images/logo-hashicorp.svg" alt="Terraform logo" title="Terraform" align="right" height="50" />
-</a>
-
 # Terraform Provider for Red Hat Subscription Manager
 
 A Terraform provider for Red Hat Subscription Manager (RHSM)
 
-This provider can be used to create and manage allocations, entitlements, and manifests for Red Hat Subscriptions
-that can be used with Red Hat Satellite.
-
-It can also be used to manage Red Hat Cloud Access for various cloud provider accounts.  Requesting access to
+This provider can be used to manage Red Hat Cloud Access for various cloud provider accounts.  Requesting access to
 gold images is supported as well for AWS, Azure, and GCP.
 
-The provider only has working tests for the `rhsm_cloud_access_account` resource, so all other resources should probably
-be considered beta.
+This provider can also be used to create and manage allocations, entitlements, and manifests for Red Hat Subscriptions
+that can be used with Red Hat Satellite. This functionality is deprecated.
 
 ## Using the provider
 
@@ -22,8 +15,8 @@ probably don't need to build the provider unless you want to contribute.
 
 ## Requirements
 
--	[Terraform](https://www.terraform.io/downloads.html) >= 0.13.x
--	[Go](https://golang.org/doc/install) >= 1.17
+-	[Terraform](https://www.terraform.io/downloads.html) >= 1.1.16
+-	[Go](https://golang.org/doc/install) >= 1.22
 
 ## Building The Provider
 
