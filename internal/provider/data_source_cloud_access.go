@@ -221,7 +221,7 @@ func (d *CloudAccessDataSource) Read(ctx context.Context, req datasource.ReadReq
 	client := d.client.Client
 	auth := d.client.Auth
 
-	cap, _, err := client.CloudaccessAPI.ListEnabledCloudAccessProviders(auth).Execute()
+	ecap, _, err := client.CloudaccessAPI.ListEnabledCloudAccessProviders(auth).Execute()
 	if err != nil {
 		resp.Diagnostics.AddError("failed to list enabled cloud access providers", err.Error())
 		return
@@ -229,7 +229,7 @@ func (d *CloudAccessDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	cloudProviders := []EnabledAccountsModel{}
 
-	for _, x := range cap.GetBody() {
+	for _, x := range ecap.GetBody() {
 		// cloudProvider := make(map[string]interface{})
 		cloudProvider := EnabledAccountsModel{
 			Name:      types.StringValue(x.GetName()),
