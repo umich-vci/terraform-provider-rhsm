@@ -1,7 +1,22 @@
-## 0.7.0 (Unreleased)
+## 0.7.0 (March 25, 2024)
+
+BREAKING CHANGES:
+* The provider is now using protocol 6 so version 0.6.1 is the last version that can be used with Terraform versions prior to 1.1.6.
+
+DEPRECATIONS:
+* Starting with Red Hat Satellite 6.11, [Entitlement-based Subscription Management is deprecated and will be removed in a future release.]
+  (https://access.redhat.com/documentation/en-us/red_hat_satellite/6.11/html/release_notes/assembly_introducing-red-hat-satellite_sat6-release-notes#ref_deprecated-functionality_assembly_introducing-red-hat-satellite)
+  As a result the following are marked as deprecated:
+  * `datasource/rhsm_allocation_entitlement`
+  * `datasource/rhsm_allocation_pools`
+  * `datasource/rhsm_allocation`
+  * `resource/rhsm_allocation_entitlement`
+  * `resource/rhsm_allocation_manifest`
+  * `resource/rhsm_allocationt`
 
 ENHANCEMENTS:
-
+* Updated `datasource/rhsm_cloud_access` to use [terraform-plugin-framework](https://github.com/hashicorp/terraform-plugin-framework) 1.6.1.
+* Updated `resource/rhsm_cloud_access_account` to use [terraform-plugin-framework](https://github.com/hashicorp/terraform-plugin-framework) 1.6.1.
 * Using go 1.22
 * Updated [terraform-plugin-sdk](https://github.com/hashicorp/terraform-plugin-sdk) to 2.33.0.
 * Updated [terraform-plugin-docs](https://github.com/hashicorp/terraform-plugin-docs) to 0.18.0.
