@@ -146,7 +146,13 @@ func (r *CloudAccessAccountResource) Configure(ctx context.Context, req resource
 		return
 	}
 
-	r.client = req.ProviderData.(*apiClient)
+	client, ok := req.ProviderData.(*apiClient)
+	if !ok {
+		resp.Diagnostics.AddError("Failed to configure Cloud Access Account resource", "Invalid provider data")
+		return
+	}
+
+	r.client = client
 }
 
 func (r *CloudAccessAccountResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

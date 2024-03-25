@@ -205,7 +205,13 @@ func (d *CloudAccessDataSource) Configure(ctx context.Context, req datasource.Co
 		return
 	}
 
-	d.client = req.ProviderData.(*apiClient)
+	client, ok := req.ProviderData.(*apiClient)
+	if !ok {
+		resp.Diagnostics.AddError("Failed to configure Cloud Access datasource", "Invalid provider data")
+		return
+	}
+
+	d.client = client
 }
 
 func (d *CloudAccessDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
