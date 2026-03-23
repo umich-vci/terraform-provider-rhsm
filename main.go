@@ -1,17 +1,12 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/tf6server"
-	"github.com/hashicorp/terraform-plugin-mux/tf5to6server"
-	"github.com/hashicorp/terraform-plugin-mux/tf6muxserver"
 	"github.com/umich-vci/terraform-provider-rhsm/internal/provider"
-	"github.com/umich-vci/terraform-provider-rhsm/internal/sdkprovider"
 )
 
 // Run "go generate" to format example terraform files and generate the docs for the registry/website
@@ -34,35 +29,10 @@ var (
 )
 
 func main() {
-	ctx := context.Background()
-
 	var debug bool
 
 	flag.BoolVar(&debug, "debug", false, "set to true to run the provider with support for debuggers like delve")
 	flag.Parse()
-
-	upgradedSdkProvider, err := tf5to6server.UpgradeServer(
-		context.Background(),
-		sdkprovider.New(version)().GRPCProvider,
-	)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	providers := []func() tfprotov6.ProviderServer{
-		func() tfprotov6.ProviderServer {
-			return upgradedSdkProvider
-		},
-
-		providerserver.NewProtocol6(provider.New(version)),
-	}
-
-	muxServer, err := tf6muxserver.NewMuxServer(ctx, providers...)
-
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	var serveOpts []tf6server.ServeOpt
 
@@ -70,9 +40,9 @@ func main() {
 		serveOpts = append(serveOpts, tf6server.WithManagedDebug())
 	}
 
-	err = tf6server.Serve(
+	err := tf6server.Serve(
 		"registry.terraform.io/umich-vci/rhsm",
-		muxServer.ProviderServer,
+		providerserver.NewProtocol6(provider.New(version)),
 		serveOpts...,
 	)
 
