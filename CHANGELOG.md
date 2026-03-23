@@ -1,3 +1,26 @@
+## 0.8.0 (Unreleased)
+
+BREAKING CHANGES:
+
+* The following deprecated resources and data sources have been removed. These were deprecated in 0.7.0 due to
+  [Entitlement-based Subscription Management being deprecated in Red Hat Satellite 6.11](https://access.redhat.com/documentation/en-us/red_hat_satellite/6.11/html/release_notes/assembly_introducing-red-hat-satellite_sat6-release-notes#ref_deprecated-functionality_assembly_introducing-red-hat-satellite):
+  * `datasource/rhsm_allocation`
+  * `datasource/rhsm_allocation_entitlement`
+  * `datasource/rhsm_allocation_pools`
+  * `resource/rhsm_allocation`
+  * `resource/rhsm_allocation_entitlement`
+  * `resource/rhsm_allocation_manifest`
+* As a result of the above removals, [terraform-plugin-sdk](https://github.com/hashicorp/terraform-plugin-sdk) and
+  [terraform-plugin-mux](https://github.com/hashicorp/terraform-plugin-mux) are no longer dependencies. The provider
+  now uses [terraform-plugin-framework](https://github.com/hashicorp/terraform-plugin-framework) exclusively.
+
+ENHANCEMENTS:
+
+* Updated [terraform-plugin-framework](https://github.com/hashicorp/terraform-plugin-framework) to 1.19.0.
+* Updated [terraform-plugin-docs](https://github.com/hashicorp/terraform-plugin-docs) to 0.24.0.
+* Updated [gorhsm](https://github.com/umich-vci/gorhsm) to 1.366.1.
+* Using go 1.25.
+
 ## 0.7.0 (March 25, 2024)
 
 BREAKING CHANGES:
